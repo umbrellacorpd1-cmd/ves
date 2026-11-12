@@ -186,6 +186,24 @@ try {
     Copy-Item (Join-Path $e2eDir 'library.json') (Join-Path $Out 'e2e-library.json')
     Write-Host '  PASS: playtime tracked and persisted'
 
+    # Apps started outside the launcher (desktop, Start menu) are detected and counted too.
+    $before2 = @(Get-Process notepad -ErrorAction SilentlyContinue | ForEach-Object Id)
+    Start-Process -FilePath 'C:\Windows\System32\notepad.exe' | Out-Null
+    [void](Find-El $win 'HeroFocus' 15)
+    Write-Host '  external launch picked up (banner switched to the running app)'
+    Start-Sleep -Seconds 20
+    Get-Process notepad -ErrorAction SilentlyContinue | Where-Object { $before2 -notcontains $_.Id } | Stop-Process -Force
+    Start-Sleep -Seconds 12
+    $lib = Get-Content (Join-Path $e2eDir 'library.json') -Raw | ConvertFrom-Json
+    $sessions = @(($lib.apps | Where-Object { $_.name -eq 'Notepad' }).sessions)
+    if ($sessions.Count -lt 2) { throw 'Notepad started outside the launcher was not recorded' }
+    $ext = $sessions[-1]
+    Write-Host "  external session: $($ext.d) s, detected=$($ext.x)"
+    if (-not $ext.x) { throw 'External session is not marked as detected' }
+    if ([int]$ext.d -lt 15 -or [int]$ext.d -gt 45) { throw "External session length $($ext.d) s is outside 15..45 s" }
+    Copy-Item (Join-Path $e2eDir 'library.json') (Join-Path $Out 'e2e-library.json') -Force
+    Write-Host '  PASS: app started outside the launcher was tracked'
+
     # Close button keeps the launcher alive in the tray; starting the exe again restores the same instance.
     $hwnd = [IntPtr]$win.Current.NativeWindowHandle
     Invoke-El (Find-El $win 'CloseButton')

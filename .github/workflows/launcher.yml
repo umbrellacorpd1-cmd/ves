@@ -14,6 +14,11 @@ on:
 permissions:
   contents: read
 
+# One run per branch: a push and its pull_request event share the group, newer commits cancel older runs.
+concurrency:
+  group: launcher-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
 jobs:
   windows:
     name: Build and UI test (Windows)
