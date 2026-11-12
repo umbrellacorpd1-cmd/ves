@@ -278,7 +278,7 @@ public static class Dummy {
     $lib = Get-Content (Join-Path $matchDir 'library.json') -Raw | ConvertFrom-Json
     function Get-Sessions([string]$name) { @(($lib.apps | Where-Object { $_.name -eq $name }).sessions) }
     function Assert-OneSession([string]$name, [int]$min, [int]$max, [bool]$detected) {
-        $s = Get-Sessions $name
+        $s = @(Get-Sessions $name)  # functions unroll one-item arrays
         Write-Host ("  {0}: {1} session(s) [{2}]" -f $name, $s.Count, (($s | ForEach-Object { "$($_.d) s, detected=$($_.x)" }) -join '; '))
         if ($s.Count -ne 1) { throw "$name should have exactly one session" }
         if ([int]$s[0].d -lt $min -or [int]$s[0].d -gt $max) { throw "$name session of $($s[0].d) s is outside $min..$max s" }
@@ -287,7 +287,7 @@ public static class Dummy {
     Assert-OneSession 'Alpha' 15 30 $true
     Assert-OneSession 'ChildStub' 15 30 $false
     Assert-OneSession 'BrokerStub' 15 35 $false
-    $betaSessions = Get-Sessions 'Beta'
+    $betaSessions = @(Get-Sessions 'Beta')
     Write-Host "  Beta: $($betaSessions.Count) session(s)"
     if ($betaSessions.Count -ne 0) { throw 'Beta was credited with time from Alpha, which only shares its folder' }
     Stop-Launcher
