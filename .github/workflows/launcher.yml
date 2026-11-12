@@ -14,14 +14,16 @@ on:
 permissions:
   contents: read
 
-# One run per branch: a push and its pull_request event share the group, newer commits cancel older runs.
+# A newer commit cancels the older run of the same event on the same branch.
 concurrency:
-  group: launcher-${{ github.head_ref || github.ref_name }}
+  group: launcher-${{ github.event_name }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
   windows:
     name: Build and UI test (Windows)
+    # Feature-branch pushes are covered by their pull_request run; a skipped job reports success.
+    if: github.event_name != 'push' || github.ref_name == github.event.repository.default_branch
     runs-on: windows-latest
     timeout-minutes: 25
     steps:

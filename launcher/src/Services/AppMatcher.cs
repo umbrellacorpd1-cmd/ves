@@ -4,7 +4,7 @@ using System.IO;
 
 namespace UmbraLauncher.Services
 {
-    /// <summary>Decides whether a running process belongs to a library app.</summary>
+    /// <summary>Identifies a library app's executable, install folder and extra process names for the tracker.</summary>
     public sealed class AppMatcher
     {
         private static HashSet<string> _sharedDirs;
@@ -51,22 +51,6 @@ namespace UmbraLauncher.Services
             }
 
             return m;
-        }
-
-        public bool IsMatch(ProcInfo p)
-        {
-            if (p.PathLower != null)
-            {
-                if (p.PathLower == ExePathLower) return true;
-                if (DirLower != null && p.PathLower.StartsWith(DirLower, StringComparison.Ordinal)) return true;
-            }
-            else if (ExeNameLower != null && p.ExeNameLower == ExeNameLower)
-            {
-                // Protected processes hide their path; fall back to the file name.
-                return true;
-            }
-
-            return Extra.Count > 0 && Extra.Contains(p.ExeNameLower);
         }
 
         /// <summary>Folders that hold many unrelated programs, where "same folder" says nothing about ownership.</summary>

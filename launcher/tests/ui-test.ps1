@@ -2,7 +2,8 @@
   End-to-end UI test for Umbra Launcher on a real Windows desktop (GitHub Actions windows runner).
   Part 1 drives the real flow through UI Automation: add notepad.exe via the dialog, launch it from its card,
   keep it running ~70 s, close it, and assert that a matching session was written to library.json.
-  Part 2 seeds demo data and captures screenshots of every screen.
+  Part 2 uses stand-in programs to check that each process is credited to the right app and that launcher hand-offs count.
+  Part 3 seeds demo data and captures screenshots of every screen.
 #>
 param(
     [Parameter(Mandatory = $true)][string]$Exe,
@@ -127,6 +128,7 @@ function Scroll-Top {
 
 $failed = $false
 $e2eDir = Join-Path $env:RUNNER_TEMP 'umbra-e2e'
+$matchDir = Join-Path $env:RUNNER_TEMP 'umbra-match'
 $demoDir = Join-Path $env:RUNNER_TEMP 'umbra-demo'
 
 try {
@@ -217,8 +219,82 @@ try {
     Write-Host '  PASS: close-to-tray and single-instance restore'
     Stop-Launcher
 
-    # ---------------- Part 2: seeded demo screenshots ----------------
-    Write-Host '== Part 2: demo screenshots'
+    # ---------------- Part 2: which process counts for which app ----------------
+    Write-Host '== Part 2: process attribution (shared folder, child hand-off, non-child hand-off)'
+    $bin = Join-Path $env:RUNNER_TEMP 'umbra-bin'
+    Remove-Item -Recurse -Force $matchDir, $bin -ErrorAction SilentlyContinue
+    foreach ($d in 'shared', 'child', 'broker') { New-Item -ItemType Directory -Force (Join-Path $bin $d) | Out-Null }
+    New-Item -ItemType Directory -Force $matchDir | Out-Null
+
+    # Windowless stand-in for real programs: "sleep <s>" waits; "spawn <exe> <s>" starts <exe> as a child and exits.
+    $dummy = Join-Path $bin 'dummy.exe'
+    Add-Type -OutputAssembly $dummy -OutputType WindowsApplication -TypeDefinition @"
+public static class Dummy {
+    public static void Main(string[] args) {
+        if (args.Length >= 3 && args[0] == "spawn") {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(args[1], "sleep " + args[2]) { UseShellExecute = false });
+            return;
+        }
+        System.Threading.Thread.Sleep((args.Length >= 2 ? int.Parse(args[1]) : 30) * 1000);
+    }
+}
+"@
+    $alpha = Join-Path $bin 'shared\alpha.exe'
+    $beta = Join-Path $bin 'shared\beta.exe'
+    $childStub = Join-Path $bin 'child\stub.exe'
+    $childGame = Join-Path $bin 'child\game.exe'
+    $brokerStub = Join-Path $bin 'broker\stub.exe'
+    $brokerGame = Join-Path $bin 'broker\game.exe'
+    foreach ($f in $alpha, $beta, $childStub, $childGame, $brokerStub, $brokerGame) { Copy-Item $dummy $f }
+
+    $now = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+    function New-Entry([string]$name, [string]$path, [string]$arguments) {
+        [ordered]@{ id = [Guid]::NewGuid().ToString('N'); name = $name; path = $path; args = $arguments; workdir = ''; admin = $false
+                    extra = ''; cover = ''; added = [long]$now; lastPlayed = 0; launches = 0; sessions = @() }
+    }
+    $library = [ordered]@{
+        version  = 1
+        settings = [ordered]@{ language = 'en'; accent = '#E81C5A'; title = 'Umbra'; minimizeOnLaunch = $false; closeToTray = $true
+                               trackExternal = $true; focusOnly = $false; sort = 'name'; view = 'grid'; statsRange = 14; trayHintShown = $true }
+        apps     = @(
+            (New-Entry 'Alpha' $alpha ''),
+            (New-Entry 'Beta' $beta ''),
+            (New-Entry 'ChildStub' $childStub "spawn `"$childGame`" 20"),
+            (New-Entry 'BrokerStub' $brokerStub 'sleep 2')
+        )
+    }
+    [IO.File]::WriteAllText((Join-Path $matchDir 'library.json'), (ConvertTo-Json -InputObject $library -Depth 6), (New-Object System.Text.UTF8Encoding($false)))
+
+    Start-Launcher $matchDir
+    $t0 = Get-Date
+    Start-Process -FilePath $alpha -ArgumentList 'sleep', '20'       # outside the launcher; Beta lives in the same folder
+    Invoke-El (Find-El $win 'Play_ChildStub')                          # starts game.exe as a child, then exits at once
+    Invoke-El (Find-El $win 'Play_BrokerStub')                         # runs 2 s and exits...
+    Start-Sleep -Seconds 4
+    Start-Process -FilePath $brokerGame -ArgumentList 'sleep', '20'   # ...then another process starts the game (not a child)
+    while (((Get-Date) - $t0).TotalSeconds -lt 80) { Start-Sleep -Seconds 1 }   # launched sessions stay open 60 s after launch
+
+    Copy-Item (Join-Path $matchDir 'library.json') (Join-Path $Out 'attribution-library.json')
+    $lib = Get-Content (Join-Path $matchDir 'library.json') -Raw | ConvertFrom-Json
+    function Get-Sessions([string]$name) { @(($lib.apps | Where-Object { $_.name -eq $name }).sessions) }
+    function Assert-OneSession([string]$name, [int]$min, [int]$max, [bool]$detected) {
+        $s = Get-Sessions $name
+        Write-Host ("  {0}: {1} session(s) [{2}]" -f $name, $s.Count, (($s | ForEach-Object { "$($_.d) s, detected=$($_.x)" }) -join '; '))
+        if ($s.Count -ne 1) { throw "$name should have exactly one session" }
+        if ([int]$s[0].d -lt $min -or [int]$s[0].d -gt $max) { throw "$name session of $($s[0].d) s is outside $min..$max s" }
+        if ([bool]$s[0].x -ne $detected) { throw "$name session should have detected=$detected" }
+    }
+    Assert-OneSession 'Alpha' 15 30 $true
+    Assert-OneSession 'ChildStub' 15 30 $false
+    Assert-OneSession 'BrokerStub' 15 35 $false
+    $betaSessions = Get-Sessions 'Beta'
+    Write-Host "  Beta: $($betaSessions.Count) session(s)"
+    if ($betaSessions.Count -ne 0) { throw 'Beta was credited with time from Alpha, which only shares its folder' }
+    Stop-Launcher
+    Write-Host '  PASS: each process credited to its own app; both launcher hand-offs followed'
+
+    # ---------------- Part 3: seeded demo screenshots ----------------
+    Write-Host '== Part 3: demo screenshots'
     Remove-Item -Recurse -Force $demoDir -ErrorAction SilentlyContinue
     & (Join-Path $PSScriptRoot 'seed-demo.ps1') -DataDir $demoDir
     Start-Launcher $demoDir
@@ -301,7 +377,7 @@ catch {
 }
 finally {
     Stop-Launcher
-    foreach ($dir in @($e2eDir, $demoDir)) {
+    foreach ($dir in @($e2eDir, $matchDir, $demoDir)) {
         $log = Join-Path $dir 'logs\launcher.log'
         if (Test-Path $log) {
             $dest = Join-Path $Out ("log-" + (Split-Path $dir -Leaf) + ".txt")

@@ -29,6 +29,9 @@ Windows SmartScreen may warn about an unsigned download the first time; choose *
   Per-app launch arguments, working folder and *Run as administrator*.
 - **Playtime tracking** — every session is recorded with its start, end and duration:
   - follows the launched process *and its child processes*, so launchers that start the real game and exit are still counted;
+  - if a launcher hands off to another program in the app's folder (say `PlayGTAV.exe` → `GTA5.exe`), that program is picked up
+    during the first two minutes; for other set-ups, list extra process names in the app's advanced options;
+  - each process counts for one library app only, so apps that share a folder (Word and Excel) keep separate totals;
   - also counts apps started outside the launcher (desktop, Start menu) while the launcher runs in the tray (can be turned off);
   - optional *count only while the window is active* mode;
   - sleep/hibernate gaps are not counted, and an in-progress session survives a crash or power loss.
@@ -58,7 +61,7 @@ The output is `launcher/src/bin/Release/UmbraLauncher.exe`. On Linux/macOS the b
 
 | Path | What's inside |
 | --- | --- |
-| `src/Services/PlaytimeTracker.cs` | Session tracking (process tree, install-folder matching, sleep gaps) |
+| `src/Services/PlaytimeTracker.cs` | Session tracking (process tree, launcher hand-off, sleep gaps) |
 | `src/Services/ProcessScanner.cs` | Fast Toolhelp process snapshot with cached image paths |
 | `src/Services/IconService.cs` | 256 px shell icons with alpha, dominant colour |
 | `src/ViewModels/` | Library, statistics, editor and per-app view models |
