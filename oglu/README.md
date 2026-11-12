@@ -2,10 +2,11 @@
 
 A Windows launcher that starts your games and apps and tracks how many hours you spend in each one.
 
-- Add any `.exe` (or a desktop shortcut) with the button or by drag & drop.
+- Add any `.exe` (or a desktop shortcut) with the button or by drag & drop. Oglu pulls the full-resolution icon out of the exe and themes the launcher in its colours.
 - **Play** shows a launch screen with your total hours, then counts the session live.
-- Per-app stats: total hours, today, this week, sessions, average and longest session, 14-day activity chart.
-- Optional cover image, launch arguments and "also track process" for launchers that start the real game under another name.
+- **Close app** ends a running app straight from the launcher (also from the titlebar chip and the tray). It asks politely first; if the app doesn't respond within a few seconds the button turns into **Force close**.
+- Per-app stats: total hours, today, this week, sessions, average and longest session, 14-day activity chart, plus a Library view sorted by most played, recent or name.
+- Optional background image, launch arguments and "also track process" for launchers that start the real game under another name.
 - Keeps counting from the system tray if you close the window while a game runs.
 
 Data lives in `%APPDATA%\Oglu\library.json`.

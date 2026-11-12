@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('oglu', {
   openDataDir: () => ipcRenderer.invoke('open-data-dir'),
   select: (id) => ipcRenderer.invoke('select', id),
   launch: (id) => ipcRenderer.invoke('launch', id),
+  closeApp: (id, force) => ipcRenderer.invoke('close-app', id, !!force),
   updateSettings: (patch) => ipcRenderer.invoke('settings', patch),
   windowAction: (action) => ipcRenderer.invoke('win', action),
   on: (channel, fn) => {

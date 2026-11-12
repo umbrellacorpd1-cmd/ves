@@ -45,6 +45,37 @@ function matches(names, running) {
   return names.some((n) => running.has(n) || (n.length > 15 && running.has(n.slice(0, 15))));
 }
 
+function run(cmd, args) {
+  return new Promise((resolve) => {
+    execFile(cmd, args, { windowsHide: true }, (err, stdout, stderr) => {
+      resolve({ code: err ? (typeof err.code === 'number' ? err.code : -1) : 0, out: `${stdout || ''}${stderr || ''}`.trim() });
+    });
+  });
+}
+
+/**
+ * Asks every process with one of these image names to close.
+ * Without force this is a polite request (WM_CLOSE / SIGTERM) so games can save;
+ * with force the whole process tree is terminated.
+ */
+async function killProcesses(names, { force = false } = {}) {
+  const results = await Promise.all(names.map((n) => {
+    if (process.platform === 'win32') {
+      return run('taskkill.exe', force ? ['/IM', n, '/T', '/F'] : ['/IM', n]);
+    }
+    return run('pkill', [force ? '-KILL' : '-TERM', '-i', '-x', n.slice(0, 15)]);
+  }));
+  // taskkill: 0 ok, 128 not found. pkill: 0 ok, 1 not found.
+  const notFound = process.platform === 'win32' ? 128 : 1;
+  if (results.some((r) => r.code === 0) || results.every((r) => r.code === notFound)) return { ok: true };
+  const detail = results.map((r) => r.out).find(Boolean) || '';
+  const denied = /access|denied|отказано/i.test(detail);
+  return {
+    ok: false,
+    error: denied ? 'Windows denied access. The app is probably running as administrator — run Oglu as administrator to close it.' : detail || 'The application did not respond.',
+  };
+}
+
 /**
  * Tracks running sessions by polling the process list.
  * Emits 'tick' (id, ms) while an app runs and 'end' (id, summary) when it stops.
@@ -139,4 +170,4 @@ class SessionTracker extends EventEmitter {
   }
 }
 
-module.exports = { SessionTracker, listProcessNames, processNamesFor, matches };
+module.exports = { SessionTracker, listProcessNames, processNamesFor, matches, killProcesses };

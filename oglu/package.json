@@ -1,7 +1,7 @@
 {
   "name": "oglu",
   "productName": "Oglu",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Oglu — a sleek launcher that tracks how many hours you spend in your apps.",
   "main": "src/main.js",
   "author": "Oglu",

@@ -4,16 +4,18 @@
   <meta charset="utf-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: file:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self'">
   <title>Oglu</title>
+  <link rel="stylesheet" href="fonts.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="bg" aria-hidden="true">
-    <div class="bg__blob bg__blob--1"></div>
-    <div class="bg__blob bg__blob--2"></div>
-    <div class="bg__blob bg__blob--3"></div>
-    <div class="bg__grid"></div>
-    <canvas class="bg__particles" id="particles"></canvas>
-    <div class="bg__noise"></div>
+  <div class="ambient" aria-hidden="true">
+    <div class="ambient__layer" id="ambA"></div>
+    <div class="ambient__layer" id="ambB"></div>
+    <div class="ambient__tint"></div>
+    <div class="ambient__sweep"></div>
+    <canvas class="ambient__embers" id="embers"></canvas>
+    <div class="ambient__vignette"></div>
+    <div class="ambient__grain"></div>
   </div>
 
   <div class="splash" id="splash">
@@ -34,26 +36,22 @@
 
   <header class="titlebar">
     <div class="brand">
-      <svg class="brand__mark" viewBox="0 0 64 64" aria-hidden="true">
-        <defs>
-          <linearGradient id="brandGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#ff5c8a"/><stop offset=".55" stop-color="#e81c5a"/><stop offset="1" stop-color="#ff6a3d"/>
-          </linearGradient>
-        </defs>
-        <circle cx="32" cy="32" r="24" fill="none" stroke="url(#brandGrad)" stroke-width="7" stroke-linecap="round" stroke-dasharray="125 26" transform="rotate(-48 32 32)"/>
-        <path d="M27 22.5 L43 32 L27 41.5 Z" fill="url(#brandGrad)" stroke="url(#brandGrad)" stroke-width="2" stroke-linejoin="round"/>
-      </svg>
+      <img class="brand__icon" src="../../assets/icon.png" alt="" draggable="false">
       <span class="brand__name">OGLU</span>
-      <span class="brand__ver mono" id="version">v1.0</span>
     </div>
+    <nav class="tabs" id="tabs">
+      <span class="tabs__ink" id="tabsInk"></span>
+      <button class="is-active" data-view="home"><span data-icon="home"></span>Home</button>
+      <button data-view="library"><span data-icon="grid"></span>Library</button>
+    </nav>
     <div class="titlebar__drag"></div>
     <div class="live-chip" id="liveChip" hidden>
-      <span class="live-chip__dot"></span>
-      <span class="mono live-chip__tag">LIVE</span>
-      <b id="liveName"></b>
-      <span class="mono" id="liveTime">00:00:00</span>
+      <span class="live-chip__icon" id="liveIcon"></span>
+      <span class="live-chip__text"><b id="liveName"></b><span class="mono"><i class="live-chip__dot"></i>LIVE <span id="liveTime">00:00:00</span></span></span>
+      <button class="live-chip__stop" id="liveStop" title="Close the app" data-icon="stop"></button>
     </div>
     <div class="titlebar__actions">
+      <button class="tb-btn" id="addTop" title="Add application (Ctrl+O)" data-icon="plus"></button>
       <button class="tb-btn" id="prefsBtn" title="Preferences" data-icon="sliders"></button>
       <span class="tb-sep"></span>
       <button class="tb-btn" data-win="minimize" title="Minimize" data-icon="min"></button>
@@ -62,30 +60,37 @@
     </div>
   </header>
 
-  <div class="layout">
-    <aside class="sidebar">
-      <div class="sidebar__head">
-        <span class="label mono">Library</span>
-        <span class="count mono" id="libCount">0</span>
+  <main class="app">
+    <section class="view view--home is-active" id="home">
+      <div class="shelf"><div class="shelf__track" id="shelf"></div></div>
+      <div class="stage" id="stage"></div>
+      <div class="dock" id="dock"></div>
+    </section>
+
+    <section class="view view--library" id="library">
+      <div class="lib__head">
+        <div>
+          <span class="label mono">Your collection</span>
+          <h1 class="lib__title">Library</h1>
+          <div class="lib__meta" id="libMeta"></div>
+        </div>
+        <div class="seg" id="sortSeg">
+          <button data-sort="hours" class="is-active">Most played</button>
+          <button data-sort="recent">Recent</button>
+          <button data-sort="name">A–Z</button>
+        </div>
       </div>
-      <div class="applist" id="appList"></div>
-      <button class="add-btn" id="addBtn"><span data-icon="plus"></span>Add application</button>
-      <div class="total spot">
-        <span class="label mono">Total playtime</span>
-        <div class="total__val"><b id="totalHours">0.0</b><span>hours</span></div>
-        <div class="total__sub mono" id="totalWeek">0.0 h this week</div>
-        <div class="total__bar"><i id="totalBar"></i></div>
-      </div>
-    </aside>
-    <main class="main" id="main"></main>
-  </div>
+      <div class="lib__grid" id="libGrid"></div>
+    </section>
+  </main>
 
   <div class="drawer-backdrop" id="drawerBackdrop"></div>
   <aside class="drawer" id="drawer" aria-hidden="true"></aside>
 
   <div class="launch" id="launch" aria-hidden="true">
+    <div class="launch__bg" id="launchBg"></div>
     <div class="launch__inner">
-      <div class="launch__rings"><span></span><span></span><span></span>
+      <div class="launch__art"><span></span><span></span><span></span>
         <div class="launch__tile" id="launchTile"></div>
       </div>
       <div class="launch__tag mono">Launching<i>.</i><i>.</i><i>.</i></div>

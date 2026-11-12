@@ -2,11 +2,13 @@
 
 const api = window.oglu;
 const $ = (s, root = document) => root.querySelector(s);
+const $$ = (s, root = document) => [...root.querySelectorAll(s)];
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
 const svg = (body, extra = '') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ${extra}>${body}</svg>`;
 const ICONS = {
   play: svg('<path d="M7 4.5v15l12-7.5z" fill="currentColor"/>'),
+  stop: svg('<rect x="5.5" y="5.5" width="13" height="13" rx="3" fill="currentColor" stroke="none"/>'),
   folder: svg('<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'),
   image: svg('<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>'),
   gear: svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'),
@@ -16,8 +18,9 @@ const ICONS = {
   min: svg('<path d="M5 12h14"/>', 'stroke-width="1.6"'),
   max: svg('<rect x="5" y="5" width="14" height="14" rx="2"/>', 'stroke-width="1.6"'),
   restore: svg('<rect x="4" y="8" width="12" height="12" rx="2"/><path d="M8 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2"/>', 'stroke-width="1.6"'),
+  home: svg('<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/>'),
+  grid: svg('<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>'),
   clock: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
-  flame: svg('<path d="M12 22c4 0 7-2.7 7-7 0-4-3-6-4-10-2 2-2 4-2 5-1-1-2-2-2-4-3 2-6 5.5-6 9 0 4.3 3 7 7 7z"/>'),
   calendar: svg('<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/>'),
   trophy: svg('<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>'),
   layers: svg('<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>'),
@@ -30,7 +33,6 @@ const ICONS = {
   refresh: svg('<path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/>'),
   file: svg('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>'),
 };
-const LOGO = `<svg viewBox="0 0 64 64"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5c8a"/><stop offset=".55" stop-color="#e81c5a"/><stop offset="1" stop-color="#ff6a3d"/></linearGradient></defs><circle cx="32" cy="32" r="24" fill="none" stroke="url(#lg)" stroke-width="7" stroke-linecap="round" stroke-dasharray="125 26" transform="rotate(-48 32 32)"/><path d="M27 22.5 L43 32 L27 41.5 Z" fill="url(#lg)" stroke="url(#lg)" stroke-width="2" stroke-linejoin="round"/></svg>`;
 
 function hydrateIcons(root = document) {
   root.querySelectorAll('[data-icon]').forEach((el) => {
@@ -58,19 +60,7 @@ function fmtClock(ms) {
   const p = (n) => String(n).padStart(2, '0');
   return `${p(Math.floor(s / 3600))}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}`;
 }
-const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
 function fmtAgo(ts) {
-  if (!ts) return 'Never';
-  const diff = (ts - Date.now()) / 1000;
-  const a = Math.abs(diff);
-  if (a < 60) return 'Just now';
-  if (a < 3600) return rtf.format(Math.round(diff / 60), 'minute');
-  if (a < 86400) return rtf.format(Math.round(diff / 3600), 'hour');
-  if (a < 86400 * 30) return rtf.format(Math.round(diff / 86400), 'day');
-  return new Date(ts).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-}
-const initial = (name) => (String(name).trim()[0] || '?').toUpperCase();
-function fmtAgoShort(ts) {
   if (!ts) return 'Never';
   const s = (Date.now() - ts) / 1000;
   if (s < 60) return 'Just now';
@@ -78,31 +68,110 @@ function fmtAgoShort(ts) {
   if (s < 86400) return `${Math.round(s / 3600)}h ago`;
   if (s < 86400 * 2) return 'Yesterday';
   if (s < 86400 * 30) return `${Math.round(s / 86400)}d ago`;
-  return new Date(ts).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+  return new Date(ts).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
 }
-/** Keep the drive/root and file name of long paths: C:\Games\…\Bin\Game.exe */
-function shortPath(p, max = 64) {
-  if (p.length <= max) return p;
-  const sep = p.includes('\\') ? '\\' : '/';
-  const parts = p.split(sep);
-  let tail = parts.pop();
-  const head = parts.shift();
-  while (parts.length && `${head}${sep}…${sep}${parts[parts.length - 1]}${sep}${tail}`.length <= max) tail = `${parts.pop()}${sep}${tail}`;
-  return `${head}${sep}…${sep}${tail}`;
-}
-const iconHtml = (a) => (a.icon ? `<img src="${a.icon}" alt="">` : `<b>${esc(initial(a.name))}</b>`);
+const initial = (name) => (String(name).trim()[0] || '?').toUpperCase();
+const iconHtml = (a) => (a.icon ? `<img src="${a.icon}" alt="" draggable="false">` : `<b>${esc(initial(a.name))}</b>`);
 const ease = (t) => 1 - Math.pow(1 - t, 4);
+
+// ---------- Accent colours (derived from each app's icon) ----------
+
+const BRAND = '#e81c5a';
+const accents = new Map();
+
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  if (max === min) return [0, 0, l];
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  const h = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [h * 60, s, l];
+}
+function hslToHex(h, s, l) {
+  const k = (n) => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n) => Math.round(255 * (l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1))))).toString(16).padStart(2, '0');
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+/** Keeps accents vivid and readable on the dark UI. */
+function tuneAccent(h, s, l) {
+  s = Math.max(s, 0.62);
+  l = Math.min(Math.max(l, 0.5), 0.6);
+  if (h >= 40 && h <= 80) l = Math.min(l, 0.5);
+  return hslToHex(h, Math.min(s, 0.95), l);
+}
+function hashHue(str) {
+  let h = 0;
+  for (const c of String(str)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return h % 360;
+}
+async function iconAccent(src) {
+  const img = new Image();
+  img.src = src;
+  await img.decode();
+  const c = document.createElement('canvas');
+  c.width = c.height = 40;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0, 40, 40);
+  const d = ctx.getImageData(0, 0, 40, 40).data;
+  const bins = Array.from({ length: 24 }, () => ({ w: 0, r: 0, g: 0, b: 0 }));
+  for (let i = 0; i < d.length; i += 4) {
+    if (d[i + 3] < 160) continue;
+    const [h, s, l] = rgbToHsl(d[i], d[i + 1], d[i + 2]);
+    if (s < 0.28 || l < 0.12 || l > 0.9) continue;
+    const w = s * s * (1 - Math.abs(l - 0.5));
+    const bin = bins[Math.floor(h / 15) % 24];
+    bin.w += w; bin.r += d[i] * w; bin.g += d[i + 1] * w; bin.b += d[i + 2] * w;
+  }
+  const best = bins.reduce((x, y) => (y.w > x.w ? y : x));
+  if (best.w < 8) return null;
+  const [h, s, l] = rgbToHsl(best.r / best.w, best.g / best.w, best.b / best.w);
+  return tuneAccent(h, s, l);
+}
+const accentKey = (a) => `${a.id}:${a.icon ? a.icon.length : 0}`;
+function accentOf(a) {
+  if (!a) return BRAND;
+  return accents.get(accentKey(a)) || (a.icon ? BRAND : tuneAccent(hashHue(a.name), 0.75, 0.56));
+}
+async function computeAccents(apps) {
+  await Promise.all(apps.filter((a) => a.icon && !accents.has(accentKey(a))).map(async (a) => {
+    let c = null;
+    try { c = await iconAccent(a.icon); } catch {}
+    accents.set(accentKey(a), c || BRAND);
+  }));
+}
+function inkFor(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const lum = (0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255;
+  return lum > 0.62 ? '#120b0f' : '#ffffff';
+}
+let emberRGB = '232,28,90';
+function applyAccent(hex) {
+  const root = document.documentElement.style;
+  root.setProperty('--acc', hex);
+  root.setProperty('--acc-ink', inkFor(hex));
+  const n = parseInt(hex.slice(1), 16);
+  emberRGB = `${(n >> 16) & 255},${(n >> 8) & 255},${n & 255}`;
+}
 
 // ---------- State ----------
 
 let state = { apps: [], selectedId: null, settings: {} };
-const live = new Map(); // id -> { total, today, countedMs, running, seen, at }
-let renderedKey;
+const live = new Map(); // id -> interpolation base for live counters
+const closing = new Map(); // id -> { since, force }
+let view = 'home';
+let sort = 'hours';
+let stageKey;
+let shelfKey;
 let countUp = null;
 let busy = false;
-let firstSidebar = true;
+let shelfIntro = true;
 
-const selected = () => state.apps.find((a) => a.id === state.selectedId) || null;
+const byId = (id) => state.apps.find((a) => a.id === id) || null;
+const selected = () => byId(state.selectedId);
 
 function syncLive() {
   const today = dayKey();
@@ -113,43 +182,18 @@ function syncLive() {
       countedMs: a.session?.countedMs || 0,
       running: !!a.session,
       seen: !!a.session?.seen,
-      startedAt: a.session?.startedAt || 0,
       at: performance.now(),
     });
+    if (!a.session) closing.delete(a.id);
   }
 }
 
 /** Interpolated live numbers so counters move smoothly between 2s polls. */
 function liveOf(a) {
   const l = live.get(a.id);
-  if (!l) return { total: a.totalSeconds, today: 0, countedMs: 0, running: false };
+  if (!l) return { total: a.totalSeconds, today: 0, countedMs: 0, running: false, seen: false };
   const extra = l.running && l.seen ? Math.min(performance.now() - l.at, 2500) : 0;
   return { total: l.total + extra / 1000, today: l.today + extra / 1000, countedMs: l.countedMs + extra, running: l.running, seen: l.seen };
-}
-
-// ---------- Sidebar ----------
-
-function renderSidebar() {
-  const list = $('#appList');
-  $('#libCount').textContent = state.apps.length;
-  if (!state.apps.length) {
-    list.innerHTML = '<div class="applist__empty">No applications yet</div>';
-  } else {
-    list.innerHTML = state.apps.map((a, i) => {
-      const l = liveOf(a);
-      const status = l.running ? ' · <em>LIVE</em>' : !a.exists ? ' · <span class="warn">MISSING</span>' : '';
-      return `<button class="app-item${a.id === state.selectedId ? ' is-active' : ''}" data-id="${a.id}" style="--i:${i}">
-        <span class="app-item__icon">${iconHtml(a)}${l.running ? '<i class="app-item__live"></i>' : ''}</span>
-        <span class="app-item__body">
-          <span class="app-item__name">${esc(a.name)}</span>
-          <span class="app-item__meta mono"><span data-hours="${a.id}">${fmtHours(l.total)}</span> h${status}</span>
-        </span>
-      </button>`;
-    }).join('');
-  }
-  list.classList.toggle('applist--intro', firstSidebar);
-  if (firstSidebar && state.apps.length) firstSidebar = false;
-  updateTotals();
 }
 
 function weekSeconds(a, l) {
@@ -162,100 +206,137 @@ function weekSeconds(a, l) {
   return sum;
 }
 
-function updateTotals() {
-  let total = 0;
-  let week = 0;
-  for (const a of state.apps) {
-    const l = liveOf(a);
-    total += l.total;
-    week += weekSeconds(a, l);
+// ---------- Ambient background ----------
+
+let ambKey = null;
+let ambFront = $('#ambA');
+function setAmbient(a) {
+  const key = a ? a.cover || a.icon || `none:${a.id}` : 'none';
+  if (key === ambKey) return;
+  ambKey = key;
+  const next = ambFront.id === 'ambA' ? $('#ambB') : $('#ambA');
+  next.innerHTML = '';
+  if (a?.cover) {
+    const el = document.createElement('div');
+    el.className = 'amb-cover';
+    el.style.backgroundImage = `url("${a.cover}")`;
+    next.appendChild(el);
+  } else if (a?.icon) {
+    next.innerHTML = `<img class="amb-icon amb-icon--1" src="${a.icon}" alt=""><img class="amb-icon amb-icon--2" src="${a.icon}" alt="">`;
   }
-  $('#totalHours').textContent = fmtHours(total);
-  $('#totalWeek').textContent = `${fmtHours(week)} h this week`;
-  $('#totalBar').style.width = `${Math.min(100, (week / (7 * 3600 * 4)) * 100).toFixed(1)}%`;
+  next.classList.add('is-on');
+  ambFront.classList.remove('is-on');
+  ambFront = next;
 }
 
-// ---------- Main ----------
+// ---------- Shelf ----------
 
-function renderMain() {
+function renderShelf() {
+  const track = $('#shelf');
+  const key = state.apps.map((a) => `${a.id}|${a.name}|${a.icon ? a.icon.length : 0}|${accentOf(a)}`).join(',');
+  if (key !== shelfKey) {
+    shelfKey = key;
+    track.innerHTML = state.apps.map((a, i) => `<button class="tile" data-id="${a.id}" style="--i:${i};--tile-acc:${accentOf(a)}" title="${esc(a.name)}">
+        <span class="tile__icon">${iconHtml(a)}<i class="tile__live"></i></span>
+        <span class="tile__label"><b>${esc(a.name)}</b><span class="mono" data-shelf-hours="${a.id}"></span></span>
+      </button>`).join('')
+      + `<button class="tile tile--add" data-act="add" style="--i:${state.apps.length}" title="Add application (Ctrl+O)"><span class="tile__icon">${ICONS.plus}</span></button>`;
+    track.classList.toggle('shelf--intro', shelfIntro);
+    if (state.apps.length) shelfIntro = false;
+  }
+  updateShelf();
+}
+
+function updateShelf() {
+  for (const el of $$('#shelf .tile[data-id]')) {
+    const a = byId(el.dataset.id);
+    if (!a) continue;
+    const l = liveOf(a);
+    el.classList.toggle('is-active', a.id === state.selectedId);
+    el.classList.toggle('is-live', l.running);
+    el.classList.toggle('is-missing', !a.exists);
+    el.querySelector('[data-shelf-hours]').textContent = l.running ? `● LIVE · ${fmtClock(l.countedMs)}` : `${fmtHours(l.total)} h played`;
+  }
+}
+
+function scrollShelfToActive() {
+  const track = $('#shelf');
+  const el = track.querySelector('.tile.is-active');
+  if (!el) return;
+  // Wait for the tile to finish expanding before measuring.
+  setTimeout(() => {
+    const left = el.offsetLeft - track.clientWidth / 2 + el.offsetWidth / 2;
+    track.scrollTo({ left: Math.max(0, left) });
+  }, 60);
+}
+
+// ---------- Home stage ----------
+
+function renderHome() {
   const a = selected();
-  const key = a ? a.id : 'empty';
-  if (key !== renderedKey) {
-    renderedKey = key;
-    $('#main').innerHTML = a ? heroTemplate(a) : emptyTemplate();
-    hydrateIcons($('#main'));
+  $('#home').classList.toggle('is-empty', !a);
+  const key = a ? `${a.id}|${a.cover || ''}|${a.icon ? a.icon.length : 0}` : 'empty';
+  if (key !== stageKey) {
+    stageKey = key;
+    $('#stage').innerHTML = a ? stageTemplate() : emptyTemplate();
+    $('#dock').innerHTML = a ? dockTemplate() : '';
+    hydrateIcons($('#stage'));
+    hydrateIcons($('#dock'));
     if (a) {
+      $('#artTile').innerHTML = iconHtml(a);
       buildChart(a);
       startCountUp(a);
     }
   }
-  if (a) updateMain(a);
+  if (a) updateHome(a);
+  setAmbient(a);
+  applyAccent(accentOf(a));
 }
 
 function emptyTemplate() {
   return `<section class="empty">
-    <div class="orb reveal"><div class="orb__ring"></div><div class="orb__ring orb__ring--2"></div><div class="orb__core">${LOGO}</div></div>
-    <h1 class="reveal" style="--d:.1s">Your library is <span>empty</span></h1>
-    <p class="reveal" style="--d:.18s">Add any .exe — Oglu launches it and counts every hour you spend inside.</p>
-    <button class="play reveal" style="--d:.26s" data-act="add"><span class="play__icon" data-icon="plus"></span><span>Select application</span></button>
-    <div class="empty__hint mono reveal" style="--d:.34s">or drag &amp; drop an .exe anywhere</div>
+    <div class="orb swap-art"><span class="art__orbit"></span><span class="art__orbit art__orbit--2"></span><div class="orb__core"><img src="../../assets/icon.png" alt=""></div></div>
+    <h1 class="swap" style="--d:.1s">Build your <span>library</span></h1>
+    <p class="swap" style="--d:.16s">Add any game or program — Oglu launches it and counts every hour you spend inside.</p>
+    <button class="play swap" style="--d:.22s" data-act="add"><span class="play__icon">${ICONS.plus}</span><span class="play__text"><b>Select application</b></span></button>
+    <div class="empty__hint mono swap" style="--d:.28s">or drag &amp; drop an .exe anywhere</div>
     <div class="steps">
-      <div class="step spot reveal" style="--d:.42s"><div class="step__n">01</div><b>Pick the .exe</b><span>Any game or program on your PC.</span></div>
-      <div class="step spot reveal" style="--d:.5s"><div class="step__n">02</div><b>Press Play</b><span>Oglu starts it and begins counting.</span></div>
-      <div class="step spot reveal" style="--d:.58s"><div class="step__n">03</div><b>Watch hours grow</b><span>Totals, sessions and daily activity.</span></div>
+      <div class="step swap" style="--d:.34s"><div class="step__n">01</div><b>Pick the .exe</b><span>Its icon and colours style the launcher.</span></div>
+      <div class="step swap" style="--d:.4s"><div class="step__n">02</div><b>Press Play</b><span>Oglu starts it and begins counting.</span></div>
+      <div class="step swap" style="--d:.46s"><div class="step__n">03</div><b>Close it any time</b><span>Right from the launcher or the tray.</span></div>
     </div>
   </section>`;
 }
 
-function heroTemplate(a) {
-  return `<section class="hero reveal" id="hero">
-      ${a.cover ? `<div class="hero__cover" style="background-image:url('${a.cover}')"></div>` : `<div class="hero__stripes"></div><div class="hero__letter">${esc(initial(a.name))}</div>`}
-      <div class="hero__shine"></div>
-      <i class="corner corner--tl"></i><i class="corner corner--tr"></i><i class="corner corner--bl"></i><i class="corner corner--br"></i>
-      <div class="hero__content">
-        <div class="hero__top reveal" style="--d:.08s"><span class="pill" id="pill"></span><span class="hero__path mono" id="heroPath"></span></div>
-        <h1 class="hero__title reveal" style="--d:.14s" id="heroTitle"></h1>
-        <div class="hours reveal" style="--d:.22s">
-          <span class="label mono">Time spent in app</span>
-          <div class="hours__value"><span class="hours__num" id="heroHours">0.0</span><span class="hours__unit">hours</span></div>
-          <div class="hours__sub" id="heroSub"></div>
-        </div>
-        <div class="hero__actions reveal" style="--d:.3s">
-          <button class="play" id="playBtn"><span class="play__icon" id="playIcon"></span><span id="playText">Play</span><span class="play__timer" id="playTimer"></span></button>
-          <button class="icon-btn" data-act="reveal" title="Show in folder" data-icon="folder"></button>
-          <button class="icon-btn" data-act="cover" title="Set cover image" data-icon="image"></button>
-          <button class="icon-btn" data-act="settings" title="App settings" data-icon="gear"></button>
-        </div>
+function stageTemplate() {
+  return `<div class="stage__info">
+      <div class="eyebrow swap"><span class="pill" id="pill"></span><span class="eyebrow__meta mono" id="eyebrowMeta"></span></div>
+      <h1 class="title swap" style="--d:.05s" id="title"></h1>
+      <div class="hours swap" style="--d:.1s">
+        <span class="hours__num" id="hoursNum">0.0</span>
+        <span class="hours__label"><b>Hours</b><span>spent in app</span></span>
       </div>
-      <div class="hero__side reveal" style="--d:.2s">
-        <div class="tile" id="heroTile">${iconHtml(a)}</div>
-        <div class="hero__proc mono" id="heroProc"></div>
+      <div class="subline swap" style="--d:.14s" id="subline"></div>
+      <div class="actions swap" style="--d:.2s">
+        <button class="play" id="playBtn"><span class="play__icon" id="playIcon"></span><span class="play__text"><b id="playText">Play</b><span class="play__timer mono" id="playTimer"></span></span></button>
+        <button class="stop" id="closeBtn" hidden><span class="stop__icon" id="closeIcon"></span><span id="closeText">Close app</span></button>
+        <span class="tools">
+          <button class="tool" data-act="reveal" title="Show in folder" data-icon="folder"></button>
+          <button class="tool" data-act="cover" title="Set background image" data-icon="image"></button>
+          <button class="tool" data-act="settings" title="App settings" data-icon="gear"></button>
+        </span>
       </div>
-    </section>
-    <section class="stats">
-      ${statCard('clock', 'Sessions', 'statSessions', '.36s')}
-      ${statCard('calendar', 'Last launched', 'statLast', '.42s')}
-      ${statCard('layers', 'Average session', 'statAvg', '.48s')}
-      ${statCard('trophy', 'Longest session', 'statLong', '.54s')}
-    </section>
-    <section class="panel reveal" style="--d:.6s">
-      <div class="panel__head">
-        <div><span class="label mono">Activity</span><h3>Last 14 days</h3></div>
-        <div class="panel__meta"><span>Today<b id="metaToday">0.0 h</b></span><span>This week<b id="metaWeek">0.0 h</b></span></div>
-      </div>
-      <div class="chart" id="chart"></div>
-    </section>`;
+    </div>
+    <div class="stage__art swap-art">
+      <div class="art"><span class="art__orbit"></span><span class="art__orbit art__orbit--2"></span><div class="art__tile" id="artTile"></div></div>
+      <div class="art__caption mono" id="artCaption"></div>
+    </div>`;
 }
 
-function statCard(icon, label, id, d) {
-  return `<div class="card spot reveal" style="--d:${d}">
-    <div class="card__icon" data-icon="${icon}"></div>
-    <div class="card__body">
-      <span class="label mono">${label}</span>
-      <div class="card__value" id="${id}">—</div>
-      <div class="card__sub" id="${id}Sub"></div>
-    </div>
-  </div>`;
+function dockTemplate() {
+  const stat = (icon, label, id) => `<div class="dstat"><div class="dstat__head"><span data-icon="${icon}"></span><span class="label">${label}</span></div><div class="dstat__val" id="${id}">—</div><div class="dstat__sub" id="${id}Sub"></div></div>`;
+  return `${stat('clock', 'Sessions', 'statSessions')}${stat('calendar', 'Last played', 'statLast')}${stat('layers', 'Avg session', 'statAvg')}${stat('trophy', 'Longest', 'statLong')}
+    <div class="dchart"><div class="dchart__head"><span class="label">Last 14 days</span><b id="metaWeek"></b></div><div class="chart" id="chart"></div></div>`;
 }
 
 function chartDays() {
@@ -267,13 +348,12 @@ function buildChart(a) {
   const today = dayKey();
   $('#chart').innerHTML = chartDays().map((d, i) => {
     const k = dayKey(d);
-    return `<div class="bar${k === today ? ' is-today' : ''}" data-day="${k}" style="--delay:${0.5 + i * 0.035}s">
+    return `<div class="bar${k === today ? ' is-today' : ''}" data-day="${k}" style="--delay:${0.45 + i * 0.03}s">
       <div class="bar__track"><div class="bar__fill"></div></div>
       <span class="bar__label">${d.toLocaleDateString('en-US', { weekday: 'short' }).slice(0, 2)}</span>
       <span class="bar__tip"></span>
     </div>`;
   }).join('');
-  // Next frame so bars grow from zero.
   requestAnimationFrame(() => requestAnimationFrame(() => updateChart(a)));
 }
 
@@ -292,64 +372,66 @@ function updateChart(a) {
     const date = new Date(`${b.dataset.day}T12:00:00`).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
     b.querySelector('.bar__tip').textContent = `${date} · ${fmtHM(v)}`;
   });
-  $('#metaToday').textContent = `${fmtHours(l.today)} h`;
-  $('#metaWeek').textContent = `${fmtHours(weekSeconds(a, l))} h`;
+  $('#metaWeek').textContent = `${fmtHours(weekSeconds(a, l))} h this week`;
 }
 
 function startCountUp(a) {
   const target = liveOf(a).total;
-  const from = 0;
   const t0 = performance.now();
-  const dur = 1400;
+  const el = $('#hoursNum');
   countUp = { id: a.id };
-  const el = $('#heroHours');
   const step = (t) => {
     if (!countUp || countUp.id !== a.id || !el.isConnected) return;
-    const p = Math.min(1, (t - t0) / dur);
-    el.textContent = fmtHours(from + (target - from) * ease(p));
+    const p = Math.min(1, (t - t0) / 1300);
+    el.textContent = fmtHours(target * ease(p));
     if (p < 1) requestAnimationFrame(step);
     else countUp = null;
   };
   requestAnimationFrame(step);
 }
 
-function updateMain(a) {
-  const l = liveOf(a);
+function setIcon(el, name) {
+  if (el.dataset.icon !== name) {
+    el.dataset.icon = name;
+    el.innerHTML = ICONS[name];
+  }
+}
+
+function updateHome(a) {
   const pill = $('#pill');
   if (!pill) return;
+  const l = liveOf(a);
   const status = l.running ? 'running' : a.exists ? 'ready' : 'missing';
   pill.className = `pill pill--${status}`;
-  pill.innerHTML = `<i></i>${status === 'running' ? (l.seen ? 'Running' : 'Starting') : status === 'ready' ? 'Ready' : 'File missing'}`;
-  $('#heroPath').textContent = shortPath(a.path);
-  $('#heroPath').title = a.path;
-  $('#heroTitle').textContent = a.name;
-  $('#heroProc').textContent = a.path.split(/[\\/]/).pop();
-  if (!countUp) $('#heroHours').textContent = fmtHours(l.total);
-  $('#heroSub').innerHTML = `<span><b>${fmtHM(l.total)}</b> in total</span><i class="sep"></i><span><b>${fmtHM(l.today)}</b> today</span>${a.sessions ? `<i class="sep"></i><span>last played <b>${esc(fmtAgo(a.lastPlayedAt))}</b></span>` : ''}`;
-
-  const tile = $('#heroTile');
-  const want = a.icon ? `<img src="${a.icon}" alt="">` : `<b>${esc(initial(a.name))}</b>`;
-  if (tile.dataset.src !== want) {
-    tile.dataset.src = want;
-    tile.innerHTML = want;
-  }
+  pill.innerHTML = `<i></i>${status === 'running' ? (l.seen ? 'Running' : 'Starting') : status === 'ready' ? 'Ready to play' : 'File missing'}`;
+  $('#eyebrowMeta').textContent = l.running ? `Session ${fmtClock(l.countedMs)}` : a.lastPlayedAt ? `Last played ${fmtAgo(a.lastPlayedAt)}` : 'Never played';
+  $('#title').textContent = a.name;
+  $('#title').title = a.name;
+  if (!countUp) $('#hoursNum').textContent = fmtHours(l.total);
+  $('#subline').innerHTML = `<span><b>${fmtHM(l.today)}</b> today</span><i></i><span><b>${fmtHM(weekSeconds(a, l))}</b> this week</span><i></i><span><b>${a.sessions.toLocaleString('en-US')}</b> session${a.sessions === 1 ? '' : 's'}</span>`;
+  $('#artCaption').textContent = a.path.split(/[\\/]/).pop();
+  $('#artCaption').title = a.path;
 
   const btn = $('#playBtn');
   btn.classList.toggle('is-running', l.running);
   btn.classList.toggle('is-missing', !l.running && !a.exists);
   btn.classList.toggle('is-busy', busy);
-  const icon = busy ? 'loader' : l.running ? 'play' : a.exists ? 'play' : 'file';
-  const iconEl = $('#playIcon');
-  if (iconEl.dataset.icon !== icon) {
-    iconEl.dataset.icon = icon;
-    iconEl.innerHTML = ICONS[icon];
-  }
+  setIcon($('#playIcon'), busy ? 'loader' : a.exists || l.running ? 'play' : 'file');
   $('#playText').textContent = busy ? 'Starting' : l.running ? (l.seen ? 'In game' : 'Starting') : a.exists ? 'Play' : 'Locate file';
   $('#playTimer').textContent = l.running ? fmtClock(l.countedMs) : '';
 
+  const c = closing.get(a.id);
+  const cb = $('#closeBtn');
+  cb.hidden = !l.running;
+  cb.classList.toggle('is-closing', !!c && !c.force);
+  cb.classList.toggle('is-force', !!c?.force);
+  cb.title = c?.force ? 'It is not responding — end the process immediately (unsaved progress may be lost)' : 'Ask the application to close';
+  setIcon($('#closeIcon'), c && !c.force ? 'loader' : 'stop');
+  $('#closeText').textContent = c?.force ? 'Force close' : c ? 'Closing…' : 'Close app';
+
   $('#statSessions').textContent = a.sessions.toLocaleString('en-US');
   $('#statSessionsSub').textContent = a.sessions ? `since ${new Date(a.addedAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}` : 'No sessions yet';
-  $('#statLast').textContent = l.running ? 'Now' : fmtAgoShort(a.lastPlayedAt);
+  $('#statLast').textContent = l.running ? 'Now' : fmtAgo(a.lastPlayedAt);
   $('#statLastSub').textContent = a.lastPlayedAt ? new Date(a.lastPlayedAt).toLocaleString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Press Play to start';
   $('#statAvg').textContent = a.sessions ? fmtHM(a.totalSeconds / a.sessions) : '—';
   $('#statAvgSub').textContent = a.sessions ? 'per session' : 'Needs one session';
@@ -358,29 +440,89 @@ function updateMain(a) {
   updateChart(a);
 }
 
-// ---------- Live ticker ----------
+// ---------- Library ----------
+
+function sortedApps() {
+  const apps = [...state.apps];
+  if (sort === 'hours') apps.sort((x, y) => liveOf(y).total - liveOf(x).total);
+  else if (sort === 'recent') apps.sort((x, y) => (y.lastPlayedAt || 0) - (x.lastPlayedAt || 0));
+  else apps.sort((x, y) => x.name.localeCompare(y.name));
+  return apps;
+}
+
+function renderLibrary(intro = false) {
+  if (view !== 'library') return;
+  const apps = sortedApps();
+  const total = apps.reduce((s, a) => s + liveOf(a).total, 0);
+  const max = Math.max(1, ...apps.map((a) => liveOf(a).total));
+  $('#libMeta').innerHTML = `<b>${apps.length}</b> app${apps.length === 1 ? '' : 's'} · <b id="libTotal">${fmtHours(total)}</b> hours played`;
+  const grid = $('#libGrid');
+  grid.classList.toggle('lib--intro', intro);
+  grid.innerHTML = apps.map((a, i) => {
+    const l = liveOf(a);
+    const badge = l.running ? '<span class="pill pill--running"><i></i>Live</span>' : !a.exists ? '<span class="pill pill--missing"><i></i>Missing</span>' : '';
+    return `<button class="lcard${a.exists ? '' : ' is-missing'}${badge ? ' has-badge' : ''}" data-open="${a.id}" style="--acc:${accentOf(a)};--i:${i}">
+      <span class="lcard__glare"></span>
+      <span class="lcard__rank">${String(i + 1).padStart(2, '0')}</span>
+      <span class="lcard__top"><span class="lcard__icon">${iconHtml(a)}</span>${badge}</span>
+      <span class="lcard__name">${esc(a.name)}</span>
+      <span class="lcard__hours"><b data-lib-hours="${a.id}">${fmtHours(l.total)}</b>hours</span>
+      <span class="lcard__bar"><i style="width:${Math.max(2, (l.total / max) * 100).toFixed(1)}%"></i></span>
+      <span class="lcard__foot mono"><span>${a.lastPlayedAt ? fmtAgo(a.lastPlayedAt) : 'Never played'}</span><span>${total ? Math.round((l.total / total) * 100) : 0}% of total</span></span>
+    </button>`;
+  }).join('') + `<button class="lcard lcard--add" data-act="add" style="--i:${apps.length}">${ICONS.plus}<span>Add application</span></button>`;
+}
+
+function setView(v) {
+  if (v === view) return;
+  view = v;
+  $$('#tabs button').forEach((b) => b.classList.toggle('is-active', b.dataset.view === v));
+  $('#home').classList.toggle('is-active', v === 'home');
+  $('#library').classList.toggle('is-active', v === 'library');
+  moveInk();
+  if (v === 'library') renderLibrary(true);
+}
+
+function moveInk() {
+  const b = $('#tabs button.is-active');
+  const ink = $('#tabsInk');
+  ink.style.width = `${b.offsetWidth}px`;
+  ink.style.transform = `translateX(${b.offsetLeft}px)`;
+}
+
+// ---------- Live chip & ticker ----------
 
 function renderLiveChip() {
   const running = state.apps.filter((a) => liveOf(a).running);
   const chip = $('#liveChip');
   chip.hidden = !running.length;
-  if (running.length) {
-    const a = running[0];
-    $('#liveName').textContent = running.length > 1 ? `${a.name} +${running.length - 1}` : a.name;
-    $('#liveTime').textContent = fmtClock(liveOf(a).countedMs);
+  if (!running.length) return;
+  const a = running.find((x) => x.id === state.selectedId) || running[0];
+  chip.dataset.id = a.id;
+  const icon = $('#liveIcon');
+  const want = iconHtml(a);
+  if (icon.dataset.src !== want) {
+    icon.dataset.src = want;
+    icon.innerHTML = want;
   }
+  $('#liveName').textContent = running.length > 1 ? `${a.name} +${running.length - 1}` : a.name;
+  $('#liveTime').textContent = fmtClock(liveOf(a).countedMs);
 }
 
 setInterval(() => {
+  const now = Date.now();
+  for (const [id, c] of closing) {
+    if (!c.force && now - c.since > 7000) c.force = true;
+  }
   if (!state.apps.some((a) => live.get(a.id)?.running)) return;
   const a = selected();
-  if (a) updateMain(a);
-  for (const x of state.apps) {
-    const el = document.querySelector(`[data-hours="${x.id}"]`);
-    if (el) el.textContent = fmtHours(liveOf(x).total);
-  }
-  updateTotals();
+  if (a) updateHome(a);
+  updateShelf();
   renderLiveChip();
+  for (const el of $$('[data-lib-hours]')) {
+    const x = byId(el.dataset.libHours);
+    if (x) el.textContent = fmtHours(liveOf(x).total);
+  }
 }, 500);
 
 // ---------- Launch overlay ----------
@@ -389,6 +531,7 @@ let launchTimer = null;
 function showLaunch(a) {
   const ov = $('#launch');
   $('#launchTile').innerHTML = iconHtml(a);
+  $('#launchBg').innerHTML = a.icon ? `<img src="${a.icon}" alt="">` : '';
   $('#launchName').textContent = a.name;
   $('#launchSub').textContent = a.sessions
     ? `across ${a.sessions} session${a.sessions === 1 ? '' : 's'} · last played ${fmtAgo(a.lastPlayedAt).toLowerCase()}`
@@ -419,11 +562,13 @@ function hideLaunch() {
 }
 $('#launch').addEventListener('click', hideLaunch);
 
+// ---------- Actions ----------
+
 async function launch(a) {
   if (busy || liveOf(a).running) return;
   if (!a.exists) return changePath(a);
   busy = true;
-  updateMain(a);
+  updateHome(a);
   showLaunch(a);
   let r;
   try {
@@ -436,15 +581,29 @@ async function launch(a) {
     toast('error', 'Could not launch', r?.error || 'Unknown error');
   }
   const cur = selected();
-  if (cur) updateMain(cur);
+  if (cur) updateHome(cur);
 }
 
-// ---------- Actions ----------
+async function closeApp(a) {
+  const c = closing.get(a.id);
+  if (c && !c.force) return;
+  const force = !!c?.force;
+  closing.set(a.id, { since: Date.now(), force: false });
+  updateHome(selected() || a);
+  const r = await api.closeApp(a.id, force);
+  if (!r?.ok) {
+    closing.delete(a.id);
+    toast('error', `Could not close ${a.name}`, r?.error || 'Unknown error');
+  }
+  const cur = selected();
+  if (cur) updateHome(cur);
+}
 
 async function addApp(file) {
   const r = await api.addApp(file);
   if (!r) return;
   if (!r.ok) return toast('error', 'Could not add', r.error);
+  setView('home');
   toast(r.existed ? 'info' : 'success', r.existed ? 'Already in your library' : 'Application added', r.existed ? 'Selected it for you.' : 'Press Play to start tracking.');
 }
 
@@ -456,26 +615,50 @@ async function changePath(a) {
 
 async function setCover(a) {
   const r = await api.setCover(a.id);
-  if (r?.ok) {
-    renderedKey = null;
-    toast('success', 'Cover updated');
-  }
+  if (r?.ok) toast('success', 'Background updated');
 }
 
 function select(id) {
-  if (id === state.selectedId) return;
-  state.selectedId = id;
-  api.select(id);
-  renderSidebar();
-  renderMain();
-  $('#main').scrollTop = 0;
+  if (!byId(id)) return;
+  if (id !== state.selectedId) {
+    state.selectedId = id;
+    api.select(id);
+    updateShelf();
+    renderHome();
+    renderLiveChip();
+  }
+  scrollShelfToActive();
+}
+
+function step(dir) {
+  const i = state.apps.findIndex((a) => a.id === state.selectedId);
+  const next = state.apps[Math.min(state.apps.length - 1, Math.max(0, i + dir))];
+  if (next) select(next.id);
 }
 
 document.addEventListener('click', (e) => {
-  const item = e.target.closest('.app-item');
-  if (item) return select(item.dataset.id);
+  const tile = e.target.closest('.tile[data-id]');
+  if (tile) return select(tile.dataset.id);
+  const card = e.target.closest('[data-open]');
+  if (card) {
+    select(card.dataset.open);
+    return setView('home');
+  }
+  const tab = e.target.closest('#tabs button');
+  if (tab) return setView(tab.dataset.view);
+  const sortBtn = e.target.closest('#sortSeg button');
+  if (sortBtn) {
+    sort = sortBtn.dataset.sort;
+    $$('#sortSeg button').forEach((b) => b.classList.toggle('is-active', b === sortBtn));
+    return renderLibrary(true);
+  }
   const a = selected();
   if (e.target.closest('#playBtn') && a) return launch(a);
+  if (e.target.closest('#closeBtn') && a) return closeApp(a);
+  if (e.target.closest('#liveStop')) {
+    const x = byId($('#liveChip').dataset.id);
+    return x && closeApp(x);
+  }
   const act = e.target.closest('[data-act]')?.dataset.act;
   if (!act) return;
   if (act === 'add') addApp();
@@ -484,23 +667,46 @@ document.addEventListener('click', (e) => {
   else if (a && act === 'settings') openAppSettings(a);
 });
 
-$('#addBtn').addEventListener('click', () => addApp());
+$('#addTop').addEventListener('click', () => addApp());
 $('#prefsBtn').addEventListener('click', openPrefs);
-document.querySelectorAll('[data-win]').forEach((b) => b.addEventListener('click', () => api.windowAction(b.dataset.win)));
+$$('[data-win]').forEach((b) => b.addEventListener('click', () => api.windowAction(b.dataset.win)));
+$('#shelf').addEventListener('wheel', (e) => {
+  if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+    e.preventDefault();
+    $('#shelf').scrollBy({ left: e.deltaY, behavior: 'auto' });
+  }
+}, { passive: false });
 
-// Cursor spotlight
+// 3D tilt + glare on library cards
 document.addEventListener('pointermove', (e) => {
-  const el = e.target.closest?.('.spot');
-  if (!el) return;
-  const r = el.getBoundingClientRect();
-  el.style.setProperty('--mx', `${e.clientX - r.left}px`);
-  el.style.setProperty('--my', `${e.clientY - r.top}px`);
+  const card = e.target.closest?.('.lcard:not(.lcard--add)');
+  if (!card) return;
+  const r = card.getBoundingClientRect();
+  const x = (e.clientX - r.left) / r.width;
+  const y = (e.clientY - r.top) / r.height;
+  card.style.setProperty('--mx', `${x * 100}%`);
+  card.style.setProperty('--my', `${y * 100}%`);
+  card.style.setProperty('--ry', `${(x - 0.5) * 12}deg`);
+  card.style.setProperty('--rx', `${(0.5 - y) * 10}deg`);
+});
+document.addEventListener('pointerout', (e) => {
+  const card = e.target.closest?.('.lcard');
+  if (card && !card.contains(e.relatedTarget)) {
+    card.style.setProperty('--rx', '0deg');
+    card.style.setProperty('--ry', '0deg');
+  }
 });
 
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') { closeDrawer(); hideLaunch(); }
-  if (e.ctrlKey && e.key.toLowerCase() === 'o') { e.preventDefault(); addApp(); }
+  if (e.key === 'Escape') { closeDrawer(); hideLaunch(); return; }
+  if (e.ctrlKey && e.key.toLowerCase() === 'o') { e.preventDefault(); addApp(); return; }
+  if (e.target.closest('input, .drawer.is-open') || view !== 'home') return;
+  if (e.key === 'ArrowRight') step(1);
+  else if (e.key === 'ArrowLeft') step(-1);
+  else if (e.key === 'Enter' && selected() && !e.target.closest('button')) launch(selected());
 });
+
+window.addEventListener('resize', moveInk);
 
 // ---------- Drawer ----------
 
@@ -540,17 +746,17 @@ function armConfirm(btn, label, action) {
 
 function openAppSettings(a) {
   openDrawer(`
-    <div class="drawer__head"><div><span class="label mono">App settings</span><h2>${esc(a.name)}</h2></div><button class="icon-btn" data-close data-icon="close"></button></div>
+    <div class="drawer__head"><div class="drawer__title"><span class="drawer__icon">${iconHtml(a)}</span><div><span class="label">App settings</span><h2>${esc(a.name)}</h2></div></div><button class="drawer__close" data-close data-icon="close"></button></div>
     <div class="drawer__body">
       <label class="field"><span>Display name</span><input class="input" id="fName" maxlength="60"></label>
       <label class="field"><span>Launch arguments <em>optional</em></span><input class="input mono" id="fArgs" placeholder="-windowed -novid"></label>
       <label class="field"><span>Also track process <em>optional</em></span><input class="input mono" id="fTrack" placeholder="e.g. GTA5.exe">
-        <small>Use this when the .exe is a launcher that starts the real game under a different name. Separate several with commas.</small></label>
+        <small>Use this when the .exe is a launcher that starts the real game under a different name. Separate several with commas. "Close app" closes these too.</small></label>
       <div class="field"><span>Executable</span><div class="pathbox mono" id="fPath"></div>
         <div class="row"><button class="btn" data-d="change"><span data-icon="file"></span>Change file…</button><button class="btn btn--ghost" data-d="reveal"><span data-icon="folder"></span>Show in folder</button></div></div>
-      <div class="field"><span>Cover image</span>
-        <div class="row"><button class="btn" data-d="cover"><span data-icon="image"></span>Choose image…</button>${a.cover ? '<button class="btn btn--ghost" data-d="clear-cover">Remove cover</button>' : ''}</div></div>
-      <div class="danger"><span class="label mono">Danger zone</span>
+      <div class="field"><span>Background image <em>optional — replaces the icon backdrop</em></span>
+        <div class="row"><button class="btn" data-d="cover"><span data-icon="image"></span>Choose image…</button>${a.cover ? '<button class="btn btn--ghost" data-d="clear-cover">Use icon backdrop</button>' : ''}</div></div>
+      <div class="danger"><span class="label">Danger zone</span>
         <div class="row"><button class="btn btn--danger" data-d="reset"><span data-icon="refresh"></span>Reset playtime</button><button class="btn btn--danger" data-d="remove"><span data-icon="trash"></span>Remove from library</button></div></div>
     </div>
     <div class="drawer__foot"><button class="btn btn--ghost" data-close>Cancel</button><button class="btn btn--primary" data-d="save"><span data-icon="check"></span>Save changes</button></div>`);
@@ -566,28 +772,29 @@ function openAppSettings(a) {
     if (d === 'save') {
       await api.updateApp(a.id, { name: $('#fName').value, args: $('#fArgs').value, trackProcess: $('#fTrack').value });
       closeDrawer();
-      toast('success', 'Saved', `${$('#fName').value.trim() || a.name} updated.`);
+      toast('success', 'Saved', `${$('#fName').value.trim() || a.name} updated.`, a);
     } else if (d === 'change') {
       await changePath(a);
-      const cur = state.apps.find((x) => x.id === a.id);
+      const cur = byId(a.id);
       if (cur) $('#fPath').textContent = cur.path;
     } else if (d === 'reveal') api.reveal(a.id);
     else if (d === 'cover') { await setCover(a); closeDrawer(); }
-    else if (d === 'clear-cover') { await api.clearCover(a.id); renderedKey = null; closeDrawer(); }
-    else if (d === 'reset') armConfirm(btn, 'Click again to reset', async () => { await api.resetStats(a.id); renderedKey = null; closeDrawer(); toast('info', 'Playtime reset'); });
+    else if (d === 'clear-cover') { await api.clearCover(a.id); closeDrawer(); }
+    else if (d === 'reset') armConfirm(btn, 'Click again to reset', async () => { await api.resetStats(a.id); stageKey = null; closeDrawer(); toast('info', 'Playtime reset', a.name, a); });
     else if (d === 'remove') armConfirm(btn, 'Click again to remove', async () => {
       const r = await api.removeApp(a.id);
       if (r && !r.ok) return toast('error', 'Could not remove', r.error);
       closeDrawer();
-      toast('info', 'Removed from library', a.name);
+      toast('info', 'Removed from library', a.name, a);
     });
   };
+  $('#drawer').onchange = null;
 }
 
 function openPrefs() {
   const s = state.settings;
   openDrawer(`
-    <div class="drawer__head"><div><span class="label mono">Preferences</span><h2>Oglu settings</h2></div><button class="icon-btn" data-close data-icon="close"></button></div>
+    <div class="drawer__head"><div class="drawer__title"><span class="drawer__icon"><img src="../../assets/icon.png" alt=""></span><div><span class="label">Preferences</span><h2>Oglu settings</h2></div></div><button class="drawer__close" data-close data-icon="close"></button></div>
     <div class="drawer__body">
       <label class="toggle"><input type="checkbox" data-setting="minimizeOnLaunch" ${s.minimizeOnLaunch ? 'checked' : ''}><span class="toggle__track"><i></i></span>
         <span class="toggle__text"><b>Minimize when an app starts</b><small>Oglu gets out of the way and comes back when you close the app.</small></span></label>
@@ -597,7 +804,7 @@ function openPrefs() {
         <div class="row"><button class="btn" data-d="data"><span data-icon="folder"></span>Open data folder</button></div></div>
       <div class="about"><b>OGLU ${esc(state.version ? `v${state.version}` : '')}</b>
         <span>After you press Play, time counts for as long as the application's process is running. Time while your PC sleeps isn't counted.</span>
-        <span class="mono">Ctrl+O — add app · Esc — close panels</span></div>
+        <span class="mono">Ctrl+O add app · ←/→ switch · Enter play · Esc close panels</span></div>
     </div>`);
   $('#drawer').onclick = (e) => {
     if (e.target.closest('[data-close]')) return closeDrawer();
@@ -611,13 +818,14 @@ function openPrefs() {
 
 // ---------- Toasts ----------
 
-function toast(type, title, text = '') {
+function toast(type, title, text = '', app = null) {
   const icon = type === 'success' ? 'check' : type === 'error' ? 'alert' : 'info';
-  const life = type === 'error' ? 6000 : 4000;
+  const life = type === 'error' ? 6500 : 4000;
   const el = document.createElement('div');
   el.className = `toast toast--${type}`;
   el.style.setProperty('--life', `${life}ms`);
-  el.innerHTML = `<span class="toast__icon">${ICONS[icon]}</span><span class="toast__text"><b>${esc(title)}</b>${text ? `<span>${esc(text)}</span>` : ''}</span>`;
+  const iconInner = app?.icon ? `<img src="${app.icon}" alt="">` : ICONS[icon];
+  el.innerHTML = `<span class="toast__icon">${iconInner}</span><span class="toast__text"><b>${esc(title)}</b>${text ? `<span>${esc(text)}</span>` : ''}</span>`;
   $('#toasts').appendChild(el);
   const remove = () => { el.classList.add('is-leaving'); setTimeout(() => el.remove(), 350); };
   const t = setTimeout(remove, life);
@@ -641,10 +849,10 @@ window.addEventListener('drop', async (e) => {
   }
 });
 
-// ---------- Particles ----------
+// ---------- Embers ----------
 
-(function particles() {
-  const c = $('#particles');
+(function embers() {
+  const c = $('#embers');
   const ctx = c.getContext('2d');
   let w = 0;
   let h = 0;
@@ -656,9 +864,9 @@ window.addEventListener('drop', async (e) => {
     c.width = w * dpr;
     c.height = h * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    dots = Array.from({ length: Math.round((w * h) / 26000) }, () => ({
-      x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.6 + 0.4,
-      vy: -(Math.random() * 0.25 + 0.05), ph: Math.random() * Math.PI * 2, hue: Math.random() < 0.7 ? '255,77,125' : '255,255,255',
+    dots = Array.from({ length: Math.round((w * h) / 24000) }, () => ({
+      x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.7 + 0.4,
+      vy: -(Math.random() * 0.3 + 0.06), ph: Math.random() * Math.PI * 2, white: Math.random() < 0.3,
     }));
   };
   resize();
@@ -667,12 +875,12 @@ window.addEventListener('drop', async (e) => {
     ctx.clearRect(0, 0, w, h);
     for (const d of dots) {
       d.y += d.vy;
-      d.x += Math.sin(t / 2000 + d.ph) * 0.15;
+      d.x += Math.sin(t / 2000 + d.ph) * 0.18;
       if (d.y < -5) { d.y = h + 5; d.x = Math.random() * w; }
-      const a = 0.25 + 0.35 * Math.sin(t / 900 + d.ph) ** 2;
+      const a = 0.2 + 0.4 * Math.sin(t / 900 + d.ph) ** 2;
       ctx.beginPath();
       ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${d.hue},${a})`;
+      ctx.fillStyle = `rgba(${d.white ? '255,255,255' : emberRGB},${a})`;
       ctx.fill();
     }
     requestAnimationFrame(frame);
@@ -682,12 +890,17 @@ window.addEventListener('drop', async (e) => {
 
 // ---------- Boot ----------
 
-function applyState(s) {
+let stateSeq = 0;
+async function applyState(s) {
+  const seq = ++stateSeq;
+  await computeAccents(s.apps);
+  if (seq !== stateSeq) return;
   state = s;
   syncLive();
-  renderSidebar();
-  renderMain();
+  renderShelf();
+  renderHome();
   renderLiveChip();
+  renderLibrary();
 }
 
 api.on('state', applyState);
@@ -697,29 +910,32 @@ api.on('tick', ({ id, totalSeconds, today, session }) => {
 });
 
 api.on('session-end', ({ id, seconds, totalSeconds }) => {
-  const a = state.apps.find((x) => x.id === id);
+  const a = byId(id);
+  closing.delete(id);
   if (!a) return;
-  if (seconds >= 1) toast('success', `Session ended · +${fmtHM(seconds)}`, `${a.name} — ${fmtHours(totalSeconds)} hours in total`);
-  else toast('info', `${a.name} closed`, 'It exited before any time was counted.');
-  requestAnimationFrame(() => $('#heroHours')?.classList.add('bump'));
-  setTimeout(() => $('#heroHours')?.classList.remove('bump'), 800);
+  if (seconds >= 1) toast('success', `Session ended · +${fmtHM(seconds)}`, `${a.name} — ${fmtHours(totalSeconds)} hours in total`, a);
+  else toast('info', `${a.name} closed`, 'It exited before any time was counted.', a);
+  requestAnimationFrame(() => $('#hoursNum')?.classList.add('bump'));
+  setTimeout(() => $('#hoursNum')?.classList.remove('bump'), 800);
 });
 
-api.on('win-state', ({ maximized }) => {
-  const b = $('#maxBtn');
-  b.dataset.icon = maximized ? 'restore' : 'max';
-  b.innerHTML = ICONS[b.dataset.icon];
-});
+api.on('win-state', ({ maximized }) => setIcon($('#maxBtn'), maximized ? 'restore' : 'max'));
 
 hydrateIcons();
 const splashStart = performance.now();
-api.getState().then((s) => {
-  applyState(s);
-  $('#version').textContent = `v${s.version}`;
+api.getState().then(async (s) => {
+  await applyState(s);
+  moveInk();
   const wait = Math.max(0, 1900 - (performance.now() - splashStart));
   setTimeout(() => {
     $('#splash').classList.add('splash--out');
     setTimeout(() => $('#splash').remove(), 900);
-    if (renderedKey && selected()) { renderedKey = null; renderMain(); }
+    // Replay the entrance animations now that the splash is gone.
+    stageKey = null;
+    shelfKey = null;
+    shelfIntro = true;
+    renderShelf();
+    renderHome();
+    scrollShelfToActive();
   }, wait);
 });

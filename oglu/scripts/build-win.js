@@ -30,6 +30,11 @@ HOW TIME IS COUNTED
   app's settings under "Also track process" (e.g. GTA5.exe).
   Closing Oglu's window while a game runs keeps it counting in the system tray.
 
+CLOSING AN APP
+  While an app runs, press "Close app" (or the red stop button at the top, or the
+  tray menu). If it doesn't respond within a few seconds, use "Force close".
+  Apps running as administrator can only be closed if Oglu also runs as administrator.
+
 YOUR DATA
   %APPDATA%\\Oglu\\library.json  (playtime, sessions, settings)
 `;

@@ -7,7 +7,8 @@ const crypto = require('crypto');
 const { spawn } = require('child_process');
 const { pathToFileURL } = require('url');
 const { Store } = require('./store');
-const { SessionTracker, processNamesFor } = require('./tracker');
+const { SessionTracker, processNamesFor, killProcesses } = require('./tracker');
+const { extractIconDataUrl } = require('./exeicon');
 const { splitArgs, dayKey, prettifyName } = require('./util');
 
 const isWin = process.platform === 'win32';
@@ -44,15 +45,25 @@ function main() {
   }
 
   async function iconFor(file) {
-    if (iconCache.has(file)) return iconCache.get(file);
+    let key;
+    try {
+      key = `${file}|${fs.statSync(file).mtimeMs}`;
+    } catch {
+      return null;
+    }
+    if (iconCache.has(key)) return iconCache.get(key);
     let url = null;
     try {
-      if (fs.existsSync(file)) {
+      url = extractIconDataUrl(file);
+    } catch {}
+    if (!url) {
+      // Packed or icon-less executables: fall back to whatever the OS shell shows.
+      try {
         const img = await app.getFileIcon(file, { size: 'large' });
         if (!img.isEmpty()) url = img.toDataURL();
-      }
-    } catch {}
-    iconCache.set(file, url);
+      } catch {}
+    }
+    iconCache.set(key, url);
     return url;
   }
 
@@ -182,6 +193,15 @@ function main() {
     }
     pushState();
     return { ok: true };
+  }
+
+  async function closeApp(id, force = false) {
+    const a = store.get(id);
+    if (!a || !tracker.has(id)) return { ok: false, error: 'This application is not running.' };
+    const r = await killProcesses(processNamesFor(a), { force });
+    // Re-check soon so the session ends promptly instead of on the next regular poll.
+    for (const ms of [400, 1200, 2400, 4000]) setTimeout(() => tracker.poll(), ms);
+    return r;
   }
 
   // ---------- Library ----------
@@ -344,6 +364,8 @@ function main() {
 
   ipcMain.handle('launch', (_e, id) => launch(id));
 
+  ipcMain.handle('close-app', (_e, id, force) => closeApp(id, force === true));
+
   ipcMain.handle('settings', (_e, patch) => {
     for (const k of ['minimizeOnLaunch', 'closeToTray']) {
       if (typeof patch?.[k] === 'boolean') store.data.settings[k] = patch[k];
@@ -410,9 +432,14 @@ function main() {
       enabled: !tracker.has(a.id),
       click: () => launch(a.id).then((r) => { if (!r.ok) dialog.showErrorBox('Oglu', r.error); }),
     }));
+    const closeItems = running.map((a) => ({
+      label: `Close ${a.name}`,
+      click: () => closeApp(a.id).then((r) => { if (!r.ok) dialog.showErrorBox('Oglu', r.error); }),
+    }));
     tray.setContextMenu(Menu.buildFromTemplate([
       { label: 'Open Oglu', click: showWindow },
       ...(launchItems.length ? [{ type: 'separator' }, ...launchItems] : []),
+      ...(closeItems.length ? [{ type: 'separator' }, ...closeItems] : []),
       { type: 'separator' },
       { label: 'Quit Oglu', click: () => { quitting = true; app.quit(); } },
     ]));
