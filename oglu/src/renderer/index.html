@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: file:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self'">
+  <title>Oglu</title>
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="ambient" aria-hidden="true">
+    <div class="ambient__layer" id="ambA"></div>
+    <div class="ambient__layer" id="ambB"></div>
+    <div class="ambient__tint"></div>
+    <div class="ambient__sweep"></div>
+    <canvas class="ambient__embers" id="embers"></canvas>
+    <div class="ambient__vignette"></div>
+    <div class="ambient__grain"></div>
+  </div>
+
+  <div class="splash" id="splash">
+    <div class="splash__glow"></div>
+    <svg class="splash__logo" viewBox="0 0 64 64" aria-hidden="true">
+      <defs>
+        <linearGradient id="splashGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#ff5c8a"/><stop offset=".55" stop-color="#e81c5a"/><stop offset="1" stop-color="#ff6a3d"/>
+        </linearGradient>
+      </defs>
+      <circle class="splash__ring" cx="32" cy="32" r="24" fill="none" stroke="url(#splashGrad)" stroke-width="6.5" stroke-linecap="round" transform="rotate(-48 32 32)"/>
+      <path class="splash__play" d="M27 22.5 L43 32 L27 41.5 Z" fill="url(#splashGrad)" stroke="url(#splashGrad)" stroke-width="2" stroke-linejoin="round"/>
+    </svg>
+    <div class="splash__word"><span>O</span><span>G</span><span>L</span><span>U</span></div>
+    <div class="splash__tag mono">LAUNCHER <i></i> PLAYTIME TRACKER</div>
+    <div class="splash__bar"><i></i></div>
+  </div>
+
+  <header class="titlebar">
+    <div class="brand">
+      <img class="brand__icon" src="../../assets/icon.png" alt="" draggable="false">
+      <span class="brand__name">OGLU</span>
+    </div>
+    <nav class="tabs" id="tabs">
+      <span class="tabs__ink" id="tabsInk"></span>
+      <button class="is-active" data-view="home"><span data-icon="home"></span>Home</button>
+      <button data-view="library"><span data-icon="grid"></span>Library</button>
+    </nav>
+    <div class="titlebar__drag"></div>
+    <div class="live-chip" id="liveChip" hidden>
+      <span class="live-chip__icon" id="liveIcon"></span>
+      <span class="live-chip__text"><b id="liveName"></b><span class="mono"><i class="live-chip__dot"></i>LIVE <span id="liveTime">00:00:00</span></span></span>
+      <button class="live-chip__stop" id="liveStop" title="Close the app" data-icon="stop"></button>
+    </div>
+    <div class="titlebar__actions">
+      <button class="tb-btn" id="addTop" title="Add application (Ctrl+O)" data-icon="plus"></button>
+      <button class="tb-btn" id="prefsBtn" title="Preferences" data-icon="sliders"></button>
+      <span class="tb-sep"></span>
+      <button class="tb-btn" data-win="minimize" title="Minimize" data-icon="min"></button>
+      <button class="tb-btn" data-win="maximize" title="Maximize" data-icon="max" id="maxBtn"></button>
+      <button class="tb-btn tb-btn--close" data-win="close" title="Close" data-icon="close"></button>
+    </div>
+  </header>
+
+  <main class="app">
+    <section class="view view--home is-active" id="home">
+      <div class="shelf"><div class="shelf__track" id="shelf"></div></div>
+      <div class="stage" id="stage"></div>
+      <div class="dock" id="dock"></div>
+    </section>
+
+    <section class="view view--library" id="library">
+      <div class="lib__head">
+        <div>
+          <span class="label mono">Your collection</span>
+          <h1 class="lib__title">Library</h1>
+          <div class="lib__meta" id="libMeta"></div>
+        </div>
+        <div class="seg" id="sortSeg">
+          <button data-sort="hours" class="is-active">Most played</button>
+          <button data-sort="recent">Recent</button>
+          <button data-sort="name">A–Z</button>
+        </div>
+      </div>
+      <div class="lib__grid" id="libGrid"></div>
+    </section>
+  </main>
+
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="drawer" id="drawer" aria-hidden="true"></aside>
+
+  <div class="launch" id="launch" aria-hidden="true">
+    <div class="launch__bg" id="launchBg"></div>
+    <div class="launch__inner">
+      <div class="launch__art"><span></span><span></span><span></span>
+        <div class="launch__tile" id="launchTile"></div>
+      </div>
+      <div class="launch__tag mono">Launching<i>.</i><i>.</i><i>.</i></div>
+      <div class="launch__name" id="launchName"></div>
+      <div class="launch__spent">You've spent</div>
+      <div class="launch__hours"><b id="launchHours">0.0</b><span>hours</span></div>
+      <div class="launch__sub" id="launchSub"></div>
+      <div class="launch__bar"><i></i></div>
+    </div>
+  </div>
+
+  <div class="dropzone" id="dropzone">
+    <div class="dropzone__box">
+      <span data-icon="download"></span>
+      <b>Drop to add</b>
+      <span class="mono">.exe or shortcut</span>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
