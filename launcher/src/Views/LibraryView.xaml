@@ -208,7 +208,7 @@
                                 </Border>
                                 <Border Style="{StaticResource Badge.DarkRunning}" Visibility="{Binding IsRunning, Converter={StaticResource BoolVis}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <c:PulseDot Fill="{StaticResource B.Success}" Width="6" Height="6" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <Ellipse Fill="{StaticResource B.Success}" Width="6" Height="6" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                         <TextBlock Text="{Binding RunningLabel}"/>
                                     </StackPanel>
                                 </Border>

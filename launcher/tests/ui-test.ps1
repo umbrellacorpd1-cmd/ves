@@ -256,13 +256,20 @@ try {
     Save-Shot '19-add-dialog-ru'
     Invoke-El (Find-El $win 'EditorCancel')
 
-    # Resource use while tracking one running app (scans every 2 s).
+    # Resource use while tracking one running app (scans every 2 s): window visible, then hidden in the tray.
+    function Measure-Cpu([int]$seconds) {
+        $proc.Refresh()
+        $t0 = $proc.TotalProcessorTime.TotalMilliseconds
+        Start-Sleep -Seconds $seconds
+        $proc.Refresh()
+        return ($proc.TotalProcessorTime.TotalMilliseconds - $t0) / ($seconds * 1000) / [Environment]::ProcessorCount * 100
+    }
+    $visibleCpu = Measure-Cpu 20
+    Invoke-El (Find-El $win 'CloseButton')
+    Start-Sleep -Seconds 2
+    $trayCpu = Measure-Cpu 30
     $proc.Refresh()
-    $cpu0 = $proc.TotalProcessorTime.TotalMilliseconds
-    Start-Sleep -Seconds 30
-    $proc.Refresh()
-    $cpuPct = ($proc.TotalProcessorTime.TotalMilliseconds - $cpu0) / 30000 / [Environment]::ProcessorCount * 100
-    Write-Host ("  launcher CPU while tracking: {0:N2}% of total CPU, working set {1:N0} MB" -f $cpuPct, ($proc.WorkingSet64 / 1MB))
+    Write-Host ("  launcher CPU while tracking: window visible {0:N2}%, hidden in tray {1:N2}% of total CPU ({2} cores); working set {3:N0} MB" -f $visibleCpu, $trayCpu, [Environment]::ProcessorCount, ($proc.WorkingSet64 / 1MB))
 
     Get-Process notepad -ErrorAction SilentlyContinue | Where-Object { $before -notcontains $_.Id } | Stop-Process -Force
     Stop-Launcher

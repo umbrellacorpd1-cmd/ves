@@ -134,6 +134,7 @@ namespace UmbraLauncher.Controls
     }
 
     /// <summary>Live indicator: a dot with an expanding ring (Majestic "В ЭФИРЕ" style).</summary>
+    /// <remarks>Animates only while its window is visible and not minimized, so the tray-resident launcher stays idle.</remarks>
     public sealed class PulseDot : Grid
     {
         public static readonly DependencyProperty FillProperty = DependencyProperty.Register(
@@ -141,6 +142,8 @@ namespace UmbraLauncher.Controls
 
         private readonly Ellipse _dot = new Ellipse();
         private readonly Ellipse _ring = new Ellipse();
+        private Window _window;
+        private bool _running;
 
         public PulseDot()
         {
@@ -149,11 +152,23 @@ namespace UmbraLauncher.Controls
             IsHitTestVisible = false;
             _ring.RenderTransformOrigin = new Point(0.5, 0.5);
             _ring.RenderTransform = new ScaleTransform(1, 1);
+            _ring.Opacity = 0;
             Children.Add(_ring);
             Children.Add(_dot);
             Apply();
-            Loaded += (s, e) => Start();
-            Unloaded += (s, e) => Stop();
+            Loaded += (s, e) =>
+            {
+                _window = Window.GetWindow(this);
+                if (_window != null) _window.StateChanged += OnWindowStateChanged;
+                Update();
+            };
+            Unloaded += (s, e) =>
+            {
+                if (_window != null) _window.StateChanged -= OnWindowStateChanged;
+                _window = null;
+                Update();
+            };
+            IsVisibleChanged += (s, e) => Update();
         }
 
         public Brush Fill { get => (Brush)GetValue(FillProperty); set => SetValue(FillProperty, value); }
@@ -164,25 +179,30 @@ namespace UmbraLauncher.Controls
             _ring.Fill = Fill;
         }
 
-        private void Start()
+        private void OnWindowStateChanged(object sender, EventArgs e) => Update();
+
+        private void Update()
         {
+            bool shouldRun = IsLoaded && IsVisible && _window != null && _window.WindowState != WindowState.Minimized;
+            if (shouldRun == _running) return;
+            _running = shouldRun;
+            var st = (ScaleTransform)_ring.RenderTransform;
+            if (!shouldRun)
+            {
+                st.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+                st.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+                _ring.BeginAnimation(OpacityProperty, null);
+                return;
+            }
+
             var duration = TimeSpan.FromSeconds(1.6);
             var grow = new DoubleAnimation(1, 2.8, duration) { RepeatBehavior = RepeatBehavior.Forever, EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
-            Timeline.SetDesiredFrameRate(grow, 24);
+            Timeline.SetDesiredFrameRate(grow, 20);
             var fade = new DoubleAnimation(0.55, 0, duration) { RepeatBehavior = RepeatBehavior.Forever };
-            Timeline.SetDesiredFrameRate(fade, 24);
-            var st = (ScaleTransform)_ring.RenderTransform;
+            Timeline.SetDesiredFrameRate(fade, 20);
             st.BeginAnimation(ScaleTransform.ScaleXProperty, grow);
             st.BeginAnimation(ScaleTransform.ScaleYProperty, grow);
             _ring.BeginAnimation(OpacityProperty, fade);
-        }
-
-        private void Stop()
-        {
-            var st = (ScaleTransform)_ring.RenderTransform;
-            st.BeginAnimation(ScaleTransform.ScaleXProperty, null);
-            st.BeginAnimation(ScaleTransform.ScaleYProperty, null);
-            _ring.BeginAnimation(OpacityProperty, null);
         }
     }
 }
