@@ -1,0 +1,55 @@
+name: Launcher
+
+on:
+  push:
+    paths:
+      - 'launcher/**'
+      - '.github/workflows/launcher.yml'
+  pull_request:
+    paths:
+      - 'launcher/**'
+      - '.github/workflows/launcher.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer commit cancels the older run of the same event on the same branch.
+concurrency:
+  group: launcher-${{ github.event_name }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    name: Build and UI test (Windows)
+    # Feature-branch pushes are covered by their pull_request run; a skipped job reports success.
+    if: github.event_name != 'push' || github.ref_name == github.event.repository.default_branch
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build single-file exe (.NET Framework 4.8, no dependencies)
+        shell: pwsh
+        run: |
+          dotnet build launcher/src/UmbraLauncher.csproj -c Release -nologo
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item launcher/src/bin/Release/UmbraLauncher.exe dist/
+          Get-ChildItem launcher/src/bin/Release | Format-Table Name, Length
+
+      - name: End-to-end UI and playtime test
+        shell: powershell
+        run: ./launcher/tests/ui-test.ps1 -Exe "$PWD\dist\UmbraLauncher.exe" -Out "$PWD\artifacts"
+
+      - name: Upload screenshots and logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: launcher-ui-test
+          path: artifacts/
+
+      - name: Upload launcher exe
+        uses: actions/upload-artifact@v7
+        with:
+          name: UmbraLauncher
+          path: dist/UmbraLauncher.exe

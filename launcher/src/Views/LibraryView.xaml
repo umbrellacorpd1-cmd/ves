@@ -1,0 +1,430 @@
+<UserControl x:Class="UmbraLauncher.Views.LibraryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:core="clr-namespace:UmbraLauncher.Core"
+             xmlns:c="clr-namespace:UmbraLauncher.Controls"
+             xmlns:vm="clr-namespace:UmbraLauncher.ViewModels">
+
+    <UserControl.Resources>
+        <ContextMenu x:Key="AppMenu" x:Shared="False">
+            <MenuItem Header="{core:L MenuLaunch}" Command="{Binding LaunchCommand}">
+                <MenuItem.Icon>
+                    <c:IconView Data="{StaticResource I.Play}" IsFilled="True" Size="15"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{core:L MenuLaunchAdmin}" Command="{Binding LaunchAdminCommand}">
+                <MenuItem.Icon>
+                    <c:IconView Data="{StaticResource I.Shield}" Size="15"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{core:L MenuFocus}" Command="{Binding FocusCommand}" Visibility="{Binding IsRunning, Converter={StaticResource BoolVis}}">
+                <MenuItem.Icon>
+                    <c:IconView Data="{StaticResource I.Window}" Size="15"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{core:L MenuCloseApp}" Command="{Binding CloseAppCommand}" Visibility="{Binding IsRunning, Converter={StaticResource BoolVis}}">
+                <MenuItem.Icon>
+                    <c:IconView Data="{StaticResource I.Stop}" Size="15"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <Separator/>
+            <MenuItem Header="{core:L MenuDetails}" Command="{Binding DetailsCommand}">
+                <MenuItem.Icon>
+                    <c:IconView Data="{StaticResource I.Chart}" Size="15"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{core:L MenuOpenFolder}" Command="{Binding OpenFolderCommand}">
+                <MenuItem.Icon>
+                    <c:IconView Data="{StaticResource I.Folder}" Size="15"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{core:L MenuEdit}" Command="{Binding EditCommand}">
+                <MenuItem.Icon>
+                    <c:IconView Data="{StaticResource I.Edit}" Size="15"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <Separator/>
+            <MenuItem Header="{core:L MenuRemove}" Command="{Binding RemoveCommand}" Foreground="{StaticResource B.DangerText}">
+                <MenuItem.Icon>
+                    <c:IconView Data="{StaticResource I.Trash}" Size="15"/>
+                </MenuItem.Icon>
+            </MenuItem>
+        </ContextMenu>
+
+        <!-- List-view row (Majestic step card). -->
+        <DataTemplate x:Key="RowTemplate" DataType="{x:Type vm:AppItemViewModel}">
+            <Button Style="{StaticResource Row}" Height="70" Margin="0,0,0,10" Command="{Binding DetailsCommand}"
+                    core:Behaviors.DoubleClickCommand="{Binding LaunchCommand}" ContextMenu="{StaticResource AppMenu}"
+                    AutomationProperties.Name="{Binding Name}">
+                <Grid Margin="14,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="170"/>
+                        <ColumnDefinition Width="190"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Width="44" Height="44" CornerRadius="11" Background="{Binding SoftBrush}">
+                        <Image Source="{Binding Icon}" Width="30" Height="30" RenderOptions.BitmapScalingMode="HighQuality"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="16,0,16,0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Name}" Style="{StaticResource T.Strong}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                            <Border Style="{StaticResource Badge.DarkRunning}" Margin="10,0,0,0" Padding="7,2" Visibility="{Binding IsRunning, Converter={StaticResource BoolVis}}">
+                                <TextBlock Text="{Binding LiveClock}" FontSize="10.5"/>
+                            </Border>
+                            <Border Style="{StaticResource Badge.DarkDanger}" Margin="10,0,0,0" Padding="7,2" Visibility="{Binding IsMissing, Converter={StaticResource BoolVis}}">
+                                <TextBlock Text="{core:L NotFound}" FontSize="10.5"/>
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Text="{Binding Path}" Style="{StaticResource T.Mono}" FontSize="11.5" Margin="0,4,0,0" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                        <TextBlock Text="{core:L StatTotal}" Style="{StaticResource T.Label}"/>
+                        <TextBlock Text="{Binding TotalText}" Style="{StaticResource T.Strong}" FontSize="14" Margin="0,4,0,0"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="3" VerticalAlignment="Center">
+                        <TextBlock Text="{core:L StatLast}" Style="{StaticResource T.Label}"/>
+                        <TextBlock Text="{Binding LastPlayedText}" Style="{StaticResource T.Strong}" FontSize="14" Margin="0,4,0,0" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                    <Button Grid.Column="4" Style="{StaticResource Btn.Primary}" Height="38" Padding="16,0" FontSize="12.5"
+                            core:Ui.Icon="{StaticResource I.Play}" Content="{core:L Launch}" Command="{Binding LaunchCommand}"
+                            Visibility="{Binding IsRunning, Converter={StaticResource BoolVisInv}}"/>
+                    <Button Grid.Column="4" Style="{StaticResource Btn.Light}" Height="38" Padding="14,0" FontSize="13"
+                            core:Ui.Icon="{StaticResource I.Window}" Content="{core:L SwitchTo}" Command="{Binding FocusCommand}"
+                            Visibility="{Binding IsRunning, Converter={StaticResource BoolVis}}"/>
+                </Grid>
+            </Button>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <!-- ================= Empty state (Majestic hero: card strips + outlined wordmark) ================= -->
+        <ScrollViewer Style="{StaticResource Scroll.Slim}" Visibility="{Binding HasApps, Converter={StaticResource BoolVisInv}}">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,12,0,30">
+                <Grid Width="940" Height="360">
+                    <UniformGrid Rows="1" Columns="7">
+                        <Border Style="{StaticResource EmptyCard}">
+                            <c:IconView Data="{StaticResource I.Gamepad}" Size="52" StrokeThickness="1.4" Foreground="#2EFFFFFF" VerticalAlignment="Bottom" Margin="0,0,0,54"/>
+                        </Border>
+                        <Border Style="{StaticResource EmptyCard}">
+                            <c:IconView Data="{StaticResource I.Globe}" Size="52" StrokeThickness="1.4" Foreground="#2EFFFFFF" VerticalAlignment="Bottom" Margin="0,0,0,54"/>
+                        </Border>
+                        <Border Style="{StaticResource EmptyCard}">
+                            <c:IconView Data="{StaticResource I.Music}" Size="52" StrokeThickness="1.4" Foreground="#2EFFFFFF" VerticalAlignment="Bottom" Margin="0,0,0,54"/>
+                        </Border>
+                        <Button Margin="7,0" Command="{Binding AddCommand}" Cursor="Hand" AutomationProperties.AutomationId="EmptyAddCard"
+                                AutomationProperties.Name="{core:L EmptyCta}">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Grid x:Name="Root" RenderTransformOrigin="0.5,0.5">
+                                        <Border x:Name="Glow" Margin="-26" Background="{DynamicResource B.ButtonGlow}" Opacity="0.35"/>
+                                        <Border CornerRadius="14" Background="{DynamicResource B.AccentCard}" BorderBrush="#40FFFFFF" BorderThickness="1"/>
+                                        <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,30">
+                                            <Grid Width="66" Height="66" HorizontalAlignment="Center">
+                                                <Ellipse Fill="White"/>
+                                                <c:IconView Data="{StaticResource I.Plus}" Size="30" StrokeThickness="2.6" Foreground="{DynamicResource B.Accent}"
+                                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Grid>
+                                            <TextBlock Text="{core:L EmptyCardLine1}" Margin="0,22,0,0" HorizontalAlignment="Center" FontFamily="{StaticResource F.Head}"
+                                                       FontWeight="ExtraBold" FontSize="15" Foreground="White"/>
+                                            <TextBlock Text="{core:L EmptyCardLine2}" Margin="0,3,0,0" HorizontalAlignment="Center" FontFamily="{StaticResource F.Head}"
+                                                       FontWeight="ExtraBold" FontSize="15" Foreground="White"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Glow" Property="Opacity" Value="0.9"/>
+                                            <Setter TargetName="Root" Property="RenderTransform">
+                                                <Setter.Value>
+                                                    <ScaleTransform ScaleX="1.02" ScaleY="1.02"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                        <Border Style="{StaticResource EmptyCard}">
+                            <c:IconView Data="{StaticResource I.Code}" Size="52" StrokeThickness="1.4" Foreground="#2EFFFFFF" VerticalAlignment="Bottom" Margin="0,0,0,54"/>
+                        </Border>
+                        <Border Style="{StaticResource EmptyCard}">
+                            <c:IconView Data="{StaticResource I.Chat}" Size="52" StrokeThickness="1.4" Foreground="#2EFFFFFF" VerticalAlignment="Bottom" Margin="0,0,0,54"/>
+                        </Border>
+                        <Border Style="{StaticResource EmptyCard}">
+                            <c:IconView Data="{StaticResource I.Image}" Size="52" StrokeThickness="1.4" Foreground="#2EFFFFFF" VerticalAlignment="Bottom" Margin="0,0,0,54"/>
+                        </Border>
+                    </UniformGrid>
+                    <Viewbox Width="880" Height="190" VerticalAlignment="Top" Margin="0,34,0,0" StretchDirection="Both" IsHitTestVisible="False">
+                        <c:OutlinedText Text="{Binding BrandTitle}" FontFamily="{StaticResource F.Brand}" FontWeight="Black" FontStyle="Italic"
+                                        FontSize="220" Stroke="#E6FFFFFF" StrokeThickness="2.2"/>
+                    </Viewbox>
+                </Grid>
+                <TextBlock Text="{core:L EmptyTitle}" Style="{StaticResource T.H1}" HorizontalAlignment="Center" Margin="0,40,0,0"/>
+                <TextBlock Text="{core:L EmptyText}" Style="{StaticResource T.Body}" TextAlignment="Center" MaxWidth="600" HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                <Button Style="{StaticResource Btn.Primary}" core:Ui.Icon="{StaticResource I.Plus}" Content="{core:L EmptyCta}" Command="{Binding AddCommand}"
+                        HorizontalAlignment="Center" Height="48" Padding="28,0" Margin="0,26,0,0" AutomationProperties.AutomationId="EmptyAdd"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,18,0,0">
+                    <c:IconView Data="{StaticResource I.Download}" Size="15" Foreground="{StaticResource B.Dim}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{core:L EmptyDrop}" Style="{StaticResource T.Small}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ================= Library ================= -->
+        <ScrollViewer x:Name="Scroller" Style="{StaticResource Scroll.Slim}" Visibility="{Binding HasApps, Converter={StaticResource BoolVis}}" AutomationProperties.AutomationId="LibraryScroller">
+            <StackPanel Margin="28,6,28,30">
+
+                <!-- Hero: last played / running app -->
+                <Grid Height="340" DataContext="{Binding HeroApp}" core:Ui.ClipRadius="22"
+                      Visibility="{Binding Converter={StaticResource NullVis}}" AutomationProperties.AutomationId="Hero">
+                    <Border Background="#121216"/>
+                    <Border Background="{Binding HeroGlowBrush}"/>
+                    <Image Source="{Binding Cover}" Stretch="UniformToFill" Opacity="0.6" RenderOptions.BitmapScalingMode="HighQuality"
+                           Visibility="{Binding HasCover, Converter={StaticResource BoolVis}}"/>
+                    <Border Background="{StaticResource B.HeroFade}"/>
+
+                    <Grid Width="760" Height="760" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,-90,-192,0" IsHitTestVisible="False">
+                        <Ellipse Width="236" Height="236" Stroke="{DynamicResource B.AccentRing}" StrokeThickness="1.2"/>
+                        <Ellipse Width="356" Height="356" Stroke="{DynamicResource B.AccentRing}" StrokeThickness="1.2" Opacity="0.8"/>
+                        <Ellipse Width="476" Height="476" Stroke="{DynamicResource B.AccentRing}" StrokeThickness="1.2" Opacity="0.6"/>
+                        <Ellipse Width="596" Height="596" Stroke="{DynamicResource B.AccentRing}" StrokeThickness="1.2" Opacity="0.4"/>
+                        <Ellipse Width="716" Height="716" Stroke="{DynamicResource B.AccentRing}" StrokeThickness="1.2" Opacity="0.22"/>
+                    </Grid>
+
+                    <c:OutlinedText Text="{Binding Name}" FontFamily="{StaticResource F.Brand}" FontWeight="Black" FontStyle="Italic" FontSize="180"
+                                    Stroke="#1AFFFFFF" StrokeThickness="1.3" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                                    Margin="26,0,0,38" IsHitTestVisible="False"/>
+
+                    <Grid Margin="40,34,40,86">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="300"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Top">
+                            <WrapPanel>
+                                <Border Style="{StaticResource Badge.DarkAccent}" Visibility="{Binding IsRunning, Converter={StaticResource BoolVisInv}}">
+                                    <TextBlock Text="{Binding HeroBadge}"/>
+                                </Border>
+                                <Border Style="{StaticResource Badge.DarkRunning}" Visibility="{Binding IsRunning, Converter={StaticResource BoolVis}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse Fill="{StaticResource B.Success}" Width="6" Height="6" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding RunningLabel}"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource Badge.Dark}" Visibility="{Binding RunAsAdmin, Converter={StaticResource BoolVis}}">
+                                    <TextBlock Text="{core:L Admin}"/>
+                                </Border>
+                                <Border Style="{StaticResource Badge.DarkDanger}" Visibility="{Binding IsMissing, Converter={StaticResource BoolVis}}">
+                                    <TextBlock Text="{core:L NotFound}"/>
+                                </Border>
+                            </WrapPanel>
+                            <TextBlock Text="{Binding Name}" FontFamily="{StaticResource F.Display}" FontWeight="Bold" FontSize="50" Foreground="White"
+                                       Margin="0,8,0,0" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{Binding HeroMeta}" Style="{StaticResource T.Body}" Margin="0,6,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,24,0,0">
+                                <Button Style="{StaticResource Btn.Primary}" Height="50" Padding="30,0" FontSize="14.5" core:Ui.Icon="{StaticResource I.Play}"
+                                        Content="{core:L Launch}" Command="{Binding LaunchCommand}" AutomationProperties.AutomationId="HeroLaunch"
+                                        Visibility="{Binding IsRunning, Converter={StaticResource BoolVisInv}}"/>
+                                <Button Style="{StaticResource Btn.Light}" Height="50" Padding="22,0" core:Ui.Icon="{StaticResource I.Window}"
+                                        Content="{core:L SwitchTo}" Command="{Binding FocusCommand}" AutomationProperties.AutomationId="HeroFocus"
+                                        Visibility="{Binding IsRunning, Converter={StaticResource BoolVis}}"/>
+                                <Button Style="{StaticResource Btn.Ghost}" Height="50" Padding="22,0" Margin="12,0,0,0" core:Ui.Icon="{StaticResource I.Chart}"
+                                        Content="{core:L Details}" Command="{Binding DetailsCommand}" AutomationProperties.AutomationId="HeroDetails"/>
+                                <Button Style="{StaticResource Btn.Icon}" Width="50" Height="50" Margin="12,0,0,0" core:Ui.Icon="{StaticResource I.Folder}"
+                                        Command="{Binding OpenFolderCommand}" ToolTip="{core:L MenuOpenFolder}"/>
+                            </StackPanel>
+                        </StackPanel>
+                        <Grid Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,6">
+                            <Image Source="{Binding Icon}" Width="150" Height="150" RenderOptions.BitmapScalingMode="HighQuality">
+                                <Image.Effect>
+                                    <DropShadowEffect Color="{Binding GlowColor}" BlurRadius="80" ShadowDepth="0" Opacity="0.95"/>
+                                </Image.Effect>
+                            </Image>
+                            <c:IconView Data="{StaticResource I.Layers}" Size="110" StrokeThickness="1.2" Foreground="#99FFFFFF"
+                                        Visibility="{Binding HasIcon, Converter={StaticResource BoolVisInv}}"/>
+                        </Grid>
+                    </Grid>
+
+                    <Border VerticalAlignment="Bottom" Height="86" Background="#66000000" BorderBrush="{StaticResource B.Line}" BorderThickness="0,1,0,0">
+                        <Grid Margin="40,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{core:L StatTotal}" Style="{StaticResource T.Label}"/>
+                                <TextBlock Text="{Binding TotalText}" Style="{StaticResource T.Value}" FontSize="21" Margin="0,6,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="{core:L StatSessions}" Style="{StaticResource T.Label}"/>
+                                <TextBlock Text="{Binding SessionCountText}" Style="{StaticResource T.Value}" FontSize="21" Margin="0,6,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <TextBlock Text="{core:L StatWeek}" Style="{StaticResource T.Label}"/>
+                                <TextBlock Text="{Binding WeekText}" Style="{StaticResource T.Value}" FontSize="21" Margin="0,6,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="3" VerticalAlignment="Center">
+                                <TextBlock Text="{core:L StatAvg}" Style="{StaticResource T.Label}"/>
+                                <TextBlock Text="{Binding AvgText}" Style="{StaticResource T.Value}" FontSize="21" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- Toolbar -->
+                <Grid Margin="0,34,0,10">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="{core:L AllApps}" Style="{StaticResource T.H2}" FontSize="19" VerticalAlignment="Center"/>
+                        <Border Background="#14FFFFFF" CornerRadius="6" Padding="8,3" Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding AppCountText}" FontFamily="{StaticResource F.Mono}" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource B.Muted}"/>
+                        </Border>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <TextBox x:Name="SearchBox" Style="{StaticResource Input}" Width="250" Height="40" Padding="10,0"
+                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 core:Ui.Placeholder="{core:L SearchPlaceholder}" core:Ui.Icon="{StaticResource I.Search}"
+                                 AutomationProperties.AutomationId="SearchBox"/>
+                        <Border Style="{StaticResource SegHost}" Margin="12,0,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegItem}" Content="{core:L SortRecent}"
+                                             IsChecked="{Binding SortMode, Converter={StaticResource EqBool}, ConverterParameter=recent}"/>
+                                <RadioButton Style="{StaticResource SegItem}" Content="{core:L SortMost}"
+                                             IsChecked="{Binding SortMode, Converter={StaticResource EqBool}, ConverterParameter=most}"/>
+                                <RadioButton Style="{StaticResource SegItem}" Content="{core:L SortName}"
+                                             IsChecked="{Binding SortMode, Converter={StaticResource EqBool}, ConverterParameter=name}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource SegHost}" Margin="12,0,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegItem}" Padding="9,0" core:Ui.Icon="{StaticResource I.Grid}" ToolTip="{core:L ViewGrid}" AutomationProperties.AutomationId="ViewGrid"
+                                             IsChecked="{Binding ViewMode, Converter={StaticResource EqBool}, ConverterParameter=grid}"/>
+                                <RadioButton Style="{StaticResource SegItem}" Padding="9,0" core:Ui.Icon="{StaticResource I.List}" ToolTip="{core:L ViewList}" AutomationProperties.AutomationId="ViewList"
+                                             IsChecked="{Binding ViewMode, Converter={StaticResource EqBool}, ConverterParameter=list}"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Card grid (uc.zone product cards) -->
+                <ItemsControl ItemsSource="{Binding VisibleItems}" Margin="-9,0" Focusable="False"
+                              Visibility="{Binding ViewMode, Converter={StaticResource EqVis}, ConverterParameter=grid}">
+                    <ItemsControl.Resources>
+                        <DataTemplate DataType="{x:Type vm:AppItemViewModel}">
+                            <Button x:Name="CardRoot" Style="{StaticResource Card}" Height="278" Margin="9"
+                                    Command="{Binding DetailsCommand}" core:Behaviors.DoubleClickCommand="{Binding LaunchCommand}"
+                                    ContextMenu="{StaticResource AppMenu}"
+                                    AutomationProperties.AutomationId="{Binding AutomationId}" AutomationProperties.Name="{Binding Name}">
+                                <Grid>
+                                    <Border Background="{Binding CardBrush}"/>
+                                    <Border Background="{StaticResource B.CardShine}"/>
+                                    <Image Source="{Binding Cover}" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality"
+                                           Visibility="{Binding HasCover, Converter={StaticResource BoolVis}}"/>
+                                    <Border Background="{StaticResource B.CardShade}"/>
+
+                                    <WrapPanel Margin="16,16,16,0" VerticalAlignment="Top">
+                                        <Border Style="{StaticResource Badge.Running}" Visibility="{Binding IsRunning, Converter={StaticResource BoolVis}}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Ellipse Width="6" Height="6" Fill="#18A05A" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                <TextBlock Text="{core:L Running}"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Style="{StaticResource Badge}" Visibility="{Binding HasPlaytime, Converter={StaticResource BoolVis}}">
+                                            <TextBlock Text="{Binding HoursBadge}" Foreground="{Binding BadgeTextBrush}"/>
+                                        </Border>
+                                        <Border Style="{StaticResource Badge.Accent}" Visibility="{Binding IsNew, Converter={StaticResource BoolVis}}">
+                                            <TextBlock Text="{core:L New}"/>
+                                        </Border>
+                                        <Border Style="{StaticResource Badge}" Visibility="{Binding RunAsAdmin, Converter={StaticResource BoolVis}}">
+                                            <TextBlock Text="{core:L Admin}" Foreground="{Binding BadgeTextBrush}"/>
+                                        </Border>
+                                        <Border Style="{StaticResource Badge.Danger}" Visibility="{Binding IsMissing, Converter={StaticResource BoolVis}}">
+                                            <TextBlock Text="{core:L NotFound}"/>
+                                        </Border>
+                                    </WrapPanel>
+
+                                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,26">
+                                        <Ellipse Width="170" Height="170" Fill="{StaticResource B.WhiteGlow}" Opacity="0.45"
+                                                 Visibility="{Binding HasCover, Converter={StaticResource BoolVisInv}}"/>
+                                        <Image Source="{Binding Icon}" Width="92" Height="92" RenderOptions.BitmapScalingMode="HighQuality"
+                                               Visibility="{Binding ShowCenterIcon, Converter={StaticResource BoolVis}}"/>
+                                        <c:IconView Data="{StaticResource I.Layers}" Size="66" StrokeThickness="1.5" Foreground="#D9FFFFFF"
+                                                    Visibility="{Binding ShowFallbackGlyph, Converter={StaticResource BoolVis}}"/>
+                                    </Grid>
+
+                                    <StackPanel VerticalAlignment="Bottom" Margin="18,0,72,18">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Image Source="{Binding Icon}" Width="22" Height="22" Margin="0,0,8,0" VerticalAlignment="Center"
+                                                   Visibility="{Binding HasCover, Converter={StaticResource BoolVis}}"/>
+                                            <TextBlock Text="{Binding Name}" FontFamily="{StaticResource F.Semi}" FontWeight="SemiBold" FontSize="17"
+                                                       Foreground="White" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding CardSubtitle}" FontSize="12.5" Foreground="#D9FFFFFF" Margin="0,4,0,0" TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+
+                                    <Button x:Name="PlayBtn" Style="{StaticResource Btn.PlayCircle}" Command="{Binding LaunchCommand}"
+                                            HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,16,16" Opacity="0"
+                                            AutomationProperties.AutomationId="{Binding PlayAutomationId}" AutomationProperties.Name="{core:L Launch}"
+                                            Visibility="{Binding IsRunning, Converter={StaticResource BoolVisInv}}"/>
+                                </Grid>
+                            </Button>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding IsMouseOver, ElementName=CardRoot}" Value="True">
+                                    <DataTrigger.EnterActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetName="PlayBtn" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.16"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </DataTrigger.EnterActions>
+                                    <DataTrigger.ExitActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetName="PlayBtn" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </DataTrigger.ExitActions>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+
+                        <DataTemplate DataType="{x:Type vm:AddTileItem}">
+                            <Button Style="{StaticResource Card}" Height="278" Margin="9" Command="{Binding AddCommand}"
+                                    AutomationProperties.AutomationId="AddTile" AutomationProperties.Name="{core:L AddTileTitle}">
+                                <Grid Background="#07FFFFFF">
+                                    <Rectangle RadiusX="20" RadiusY="20" Stroke="#3DFFFFFF" StrokeThickness="1.5" StrokeDashArray="5 4" Margin="1"/>
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <Border Width="58" Height="58" CornerRadius="29" Background="{DynamicResource B.AccentSoftStrong}" HorizontalAlignment="Center">
+                                            <c:IconView Data="{StaticResource I.Plus}" Size="26" StrokeThickness="2.4" Foreground="{DynamicResource B.AccentText}"
+                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="{core:L AddTileTitle}" Style="{StaticResource T.Strong}" HorizontalAlignment="Center" Margin="0,16,0,0"/>
+                                        <TextBlock Text="{core:L AddTileHint}" Style="{StaticResource T.Small}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.Resources>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource WidthToColumns}, ConverterParameter=238}"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+
+                <!-- List -->
+                <ItemsControl ItemsSource="{Binding VisibleApps}" ItemTemplate="{StaticResource RowTemplate}" Focusable="False"
+                              Visibility="{Binding ViewMode, Converter={StaticResource EqVis}, ConverterParameter=list}"/>
+
+                <!-- No search results -->
+                <StackPanel Visibility="{Binding HasResults, Converter={StaticResource BoolVisInv}}" HorizontalAlignment="Center" Margin="0,50,0,40">
+                    <c:IconView Data="{StaticResource I.Search}" Size="40" Foreground="{StaticResource B.Dim}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{core:L NoResults}" Style="{StaticResource T.H2}" HorizontalAlignment="Center" Margin="0,16,0,0"/>
+                    <TextBlock Text="{core:L NoResultsHint}" Style="{StaticResource T.Body}" HorizontalAlignment="Center" Margin="0,6,0,0"/>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
