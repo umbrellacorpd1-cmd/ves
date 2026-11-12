@@ -1,0 +1,183 @@
+<Window x:Class="UmbraLauncher.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:core="clr-namespace:UmbraLauncher.Core"
+        xmlns:c="clr-namespace:UmbraLauncher.Controls"
+        xmlns:v="clr-namespace:UmbraLauncher.Views"
+        Title="{Binding WindowTitle}"
+        Width="1320" Height="830" MinWidth="1060" MinHeight="680"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource B.Bg}"
+        Foreground="{StaticResource B.Text}"
+        FontFamily="{StaticResource F.Body}"
+        FontSize="14"
+        UseLayoutRounding="True"
+        AllowDrop="True"
+        AutomationProperties.AutomationId="UmbraMainWindow">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="72" ResizeBorderThickness="6" GlassFrameThickness="0,0,0,1" CornerRadius="0" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+
+    <Window.InputBindings>
+        <KeyBinding Key="N" Modifiers="Control" Command="{Binding AddCommand}"/>
+        <KeyBinding Key="Escape" Command="{Binding EscapeCommand}"/>
+    </Window.InputBindings>
+
+    <Window.Resources>
+        <DataTemplate x:Key="ToastTemplate">
+            <Border x:Name="Card" Margin="0,10,0,0" CornerRadius="12" Background="#19191E" BorderBrush="{StaticResource B.LineStrong}"
+                    BorderThickness="1" Padding="16,14" core:Anim.ShowEffect="SlideUp">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="28" ShadowDepth="8" Direction="270" Opacity="0.5" Color="Black"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Border x:Name="IconBg" Width="34" Height="34" CornerRadius="9" Background="{DynamicResource B.AccentSoft}" VerticalAlignment="Top">
+                        <c:IconView x:Name="Ico" Data="{StaticResource I.Info}" Size="18" Foreground="{DynamicResource B.AccentText}"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="14,0,8,0" VerticalAlignment="Center">
+                        <TextBlock x:Name="TitleText" Text="{Binding Title}" FontFamily="{StaticResource F.Semi}" FontWeight="SemiBold" FontSize="14"
+                                   Foreground="{StaticResource B.Text}" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding Message}" Style="{StaticResource T.Small}" Foreground="{StaticResource B.Muted}" Margin="0,3,0,0"
+                                   Visibility="{Binding HasMessage, Converter={StaticResource BoolVis}}"/>
+                        <Button Style="{StaticResource Btn.Link}" Content="{Binding ActionText}" Command="{Binding ActionCommand}"
+                                HorizontalAlignment="Left" Margin="0,8,0,0" Visibility="{Binding HasAction, Converter={StaticResource BoolVis}}"/>
+                    </StackPanel>
+                    <Button Grid.Column="2" Style="{StaticResource Btn.Bare}" core:Ui.Icon="{StaticResource I.Close}" Command="{Binding CloseCommand}"
+                            VerticalAlignment="Top" Width="24" Height="24"/>
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Kind}" Value="success">
+                    <Setter TargetName="IconBg" Property="Background" Value="{StaticResource B.SuccessSoft}"/>
+                    <Setter TargetName="Ico" Property="Foreground" Value="{StaticResource B.SuccessText}"/>
+                    <Setter TargetName="Ico" Property="Data" Value="{StaticResource I.Check}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="error">
+                    <!-- uc.zone alert banner: deep red panel with a red hairline -->
+                    <Setter TargetName="Card" Property="Background" Value="#251316"/>
+                    <Setter TargetName="Card" Property="BorderBrush" Value="#6B1F23"/>
+                    <Setter TargetName="IconBg" Property="Background" Value="{StaticResource B.DangerSoft}"/>
+                    <Setter TargetName="Ico" Property="Foreground" Value="{StaticResource B.DangerText}"/>
+                    <Setter TargetName="Ico" Property="Data" Value="{StaticResource I.Alert}"/>
+                    <Setter TargetName="TitleText" Property="Foreground" Value="#FF6B6E"/>
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid x:Name="Root">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="72"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="34"/>
+        </Grid.RowDefinitions>
+
+        <!-- Ambient neon glow, a nod to Majestic's pink-lit backdrop -->
+        <Grid Grid.RowSpan="3" IsHitTestVisible="False" ClipToBounds="True">
+            <Ellipse Width="1100" Height="820" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-520,-500,0,0" Fill="{DynamicResource B.AmbientGlow}"/>
+            <Ellipse Width="900" Height="700" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-460,-420" Fill="{DynamicResource B.AmbientGlow}" Opacity="0.6"/>
+        </Grid>
+
+        <!-- ============ Top bar ============ -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="28,0,0,0">
+                <Border Width="32" Height="32" CornerRadius="9" Background="{DynamicResource B.AccentGradient}">
+                    <c:IconView Data="{StaticResource I.Play}" IsFilled="True" Size="17" Foreground="White" Margin="2,0,0,0"
+                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <TextBlock Text="{Binding BrandTitle}" Margin="11,0,0,3" VerticalAlignment="Center" FontFamily="{StaticResource F.Brand}"
+                           FontWeight="Black" FontStyle="Italic" FontSize="25" Foreground="White"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="50,0,0,0" WindowChrome.IsHitTestVisibleInChrome="True">
+                <RadioButton Style="{StaticResource NavItem}" Content="{core:L NavLibrary}" AutomationProperties.AutomationId="NavLibrary"
+                             IsChecked="{Binding Page, Converter={StaticResource EqBool}, ConverterParameter=Library}"/>
+                <RadioButton Style="{StaticResource NavItem}" Content="{core:L NavStats}" AutomationProperties.AutomationId="NavStats"
+                             IsChecked="{Binding Page, Converter={StaticResource EqBool}, ConverterParameter=Stats}"/>
+                <RadioButton Style="{StaticResource NavItem}" Content="{core:L NavSettings}" AutomationProperties.AutomationId="NavSettings"
+                             IsChecked="{Binding Page, Converter={StaticResource EqBool}, ConverterParameter=Settings}"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True">
+                <Border Visibility="{Binding RunningCount, Converter={StaticResource CountVis}}" Background="{StaticResource B.SuccessSoft}"
+                        CornerRadius="16" Padding="12,0" Height="32" Margin="0,0,22,0" MaxWidth="320">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <c:PulseDot Fill="{StaticResource B.Success}" Width="7" Height="7" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding RunningChipText}" Margin="9,0,0,0" FontFamily="{StaticResource F.Mono}" FontWeight="SemiBold"
+                                   FontSize="11.5" Foreground="{StaticResource B.SuccessText}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+                <Button Style="{StaticResource Btn.Lang}" Command="{Binding ToggleLanguageCommand}" Content="{core:L LangName}"
+                        core:Ui.Icon="{StaticResource I.Globe}" ToolTip="{core:L SwitchLanguage}" AutomationProperties.AutomationId="LanguageToggle"/>
+                <Button Style="{StaticResource Btn.Primary}" Command="{Binding AddCommand}" Content="{core:L AddApp}" core:Ui.Icon="{StaticResource I.Plus}"
+                        Height="42" Margin="22,0,0,0" AutomationProperties.AutomationId="AddButton"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Top" Margin="20,0,0,0" WindowChrome.IsHitTestVisibleInChrome="True">
+                <Button Style="{StaticResource Btn.Caption}" core:Ui.Icon="{StaticResource I.Minimize}" Click="OnMinimize" ToolTip="{core:L Minimize}"/>
+                <Button x:Name="MaxButton" Style="{StaticResource Btn.Caption}" core:Ui.Icon="{StaticResource I.Maximize}" Click="OnMaximize"/>
+                <Button Style="{StaticResource Btn.CaptionClose}" core:Ui.Icon="{StaticResource I.Close}" Click="OnClose" ToolTip="{core:L Close}"
+                        AutomationProperties.AutomationId="CloseButton"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- ============ Pages ============ -->
+        <Grid Grid.Row="1">
+            <v:LibraryView x:Name="Library" core:Anim.ShowEffect="SlideUp"
+                           Visibility="{Binding Page, Converter={StaticResource EqVis}, ConverterParameter=Library}"/>
+            <v:StatsView core:Anim.ShowEffect="SlideUp"
+                         Visibility="{Binding Page, Converter={StaticResource EqVis}, ConverterParameter=Stats}"/>
+            <v:SettingsView core:Anim.ShowEffect="SlideUp"
+                            Visibility="{Binding Page, Converter={StaticResource EqVis}, ConverterParameter=Settings}"/>
+        </Grid>
+
+        <!-- ============ Status bar (Majestic footer "all systems operational") ============ -->
+        <Border Grid.Row="2" BorderBrush="{StaticResource B.Line}" BorderThickness="0,1,0,0" Background="#08FFFFFF">
+            <Grid Margin="28,0">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Ellipse Width="7" Height="7" Fill="{StaticResource B.Success}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding StatusText}" Margin="10,0,0,0" FontSize="12.5" Foreground="{StaticResource B.Muted}"
+                               TextTrimming="CharacterEllipsis" MaxWidth="700" VerticalAlignment="Center"/>
+                </StackPanel>
+                <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Text="{Binding StatusTotalText}"
+                           FontFamily="{StaticResource F.MonoMedium}" FontWeight="Medium" FontSize="11.5" Foreground="{StaticResource B.Dim}"/>
+            </Grid>
+        </Border>
+
+        <!-- ============ Overlays ============ -->
+        <v:AppDrawer Grid.Row="1" Grid.RowSpan="2"/>
+        <v:EditorDialog Grid.RowSpan="3"/>
+        <v:ConfirmDialog Grid.RowSpan="3"/>
+
+        <ItemsControl Grid.Row="1" Grid.RowSpan="2" ItemsSource="{Binding Toasts}" ItemTemplate="{StaticResource ToastTemplate}"
+                      HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="390" Margin="0,0,24,50" Focusable="False"/>
+
+        <Grid Grid.RowSpan="3" IsHitTestVisible="False" Visibility="{Binding IsDropTarget, Converter={StaticResource BoolVis}}">
+            <Border Background="#E00D0D10"/>
+            <Rectangle Margin="18" RadiusX="22" RadiusY="22" Stroke="{DynamicResource B.Accent}" StrokeThickness="2" StrokeDashArray="6 5"/>
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Border Width="88" Height="88" CornerRadius="44" Background="{DynamicResource B.AccentGradient}" HorizontalAlignment="Center">
+                    <c:IconView Data="{StaticResource I.Download}" Size="38" StrokeThickness="2.2" Foreground="White"
+                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <TextBlock Text="{core:L DropTitle}" Style="{StaticResource T.H1}" HorizontalAlignment="Center" Margin="0,24,0,0"/>
+                <TextBlock Text="{core:L DropText}" Style="{StaticResource T.Body}" HorizontalAlignment="Center" Margin="0,6,0,0"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

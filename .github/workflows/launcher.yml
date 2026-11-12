@@ -1,0 +1,48 @@
+name: Launcher
+
+on:
+  push:
+    paths:
+      - 'launcher/**'
+      - '.github/workflows/launcher.yml'
+  pull_request:
+    paths:
+      - 'launcher/**'
+      - '.github/workflows/launcher.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: Build and UI test (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build single-file exe (.NET Framework 4.8, no dependencies)
+        shell: pwsh
+        run: |
+          dotnet build launcher/src/UmbraLauncher.csproj -c Release -nologo
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item launcher/src/bin/Release/UmbraLauncher.exe dist/
+          Get-ChildItem launcher/src/bin/Release | Format-Table Name, Length
+
+      - name: End-to-end UI and playtime test
+        shell: powershell
+        run: ./launcher/tests/ui-test.ps1 -Exe "$PWD\dist\UmbraLauncher.exe" -Out "$PWD\artifacts"
+
+      - name: Upload screenshots and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: launcher-ui-test
+          path: artifacts/
+
+      - name: Upload launcher exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: UmbraLauncher
+          path: dist/UmbraLauncher.exe

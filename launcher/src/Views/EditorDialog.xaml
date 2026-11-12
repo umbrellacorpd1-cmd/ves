@@ -1,0 +1,146 @@
+<UserControl x:Class="UmbraLauncher.Views.EditorDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:core="clr-namespace:UmbraLauncher.Core"
+             xmlns:c="clr-namespace:UmbraLauncher.Controls"
+             WindowChrome.IsHitTestVisibleInChrome="True"
+             Visibility="{Binding Editor, Converter={StaticResource NullVis}}">
+    <Grid>
+        <Border Background="{StaticResource B.Backdrop}" core:Anim.ShowEffect="Fade"/>
+
+        <Border DataContext="{Binding Editor}" Width="640" Margin="0,36" VerticalAlignment="Center" HorizontalAlignment="Center"
+                Background="#141418" BorderBrush="{StaticResource B.LineStrong}" BorderThickness="1" CornerRadius="18"
+                core:Anim.ShowEffect="Pop" AutomationProperties.AutomationId="EditorDialog">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="60" ShadowDepth="18" Direction="270" Opacity="0.6" Color="Black"/>
+            </Border.Effect>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Grid Margin="30,26,22,0">
+                    <StackPanel Margin="0,0,56,0">
+                        <TextBlock Text="{Binding Title}" Style="{StaticResource T.H2}" FontSize="19"/>
+                        <TextBlock Text="{core:L EditorSubtitle}" Style="{StaticResource T.Body}" FontSize="13.5" Margin="0,6,0,0"/>
+                    </StackPanel>
+                    <Button Style="{StaticResource Btn.Icon}" Width="38" Height="38" HorizontalAlignment="Right" VerticalAlignment="Top"
+                            core:Ui.Icon="{StaticResource I.Close}" Command="{Binding CancelCommand}"/>
+                </Grid>
+
+                <ScrollViewer Grid.Row="1" Style="{StaticResource Scroll.Slim}" Margin="0,20,0,0">
+                    <StackPanel Margin="30,0,30,6">
+                        <!-- Preview: icon in its own color, name, path -->
+                        <Border Style="{StaticResource Panel}" CornerRadius="14" Padding="14">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid Width="64" Height="64" core:Ui.ClipRadius="14">
+                                    <Border Background="#14FFFFFF"/>
+                                    <Border Background="{Binding PreviewBrush}"/>
+                                    <Image Source="{Binding PreviewIcon}" Width="42" Height="42" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                    <c:IconView Data="{StaticResource I.Upload}" Size="26" Foreground="{StaticResource B.Dim}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                Visibility="{Binding PreviewIcon, Converter={StaticResource NullVisInv}}"/>
+                                </Grid>
+                                <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding PreviewTitle}" Style="{StaticResource T.Strong}" FontSize="16" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding PreviewSubtitle}" Style="{StaticResource T.Mono}" Margin="0,4,0,0" TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <TextBlock Text="{core:L FieldPath}" Style="{StaticResource T.Label}" Margin="0,22,0,8"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Style="{StaticResource Input.Mono}" Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}"
+                                     core:Ui.Placeholder="{core:L PathPlaceholder}" core:Behaviors.FocusOnShow="True"
+                                     AutomationProperties.AutomationId="EditorPath"/>
+                            <Button Grid.Column="1" Style="{StaticResource Btn.Primary}" Margin="10,0,0,0" core:Ui.Icon="{StaticResource I.Folder}"
+                                    Content="{core:L Browse}" Command="{Binding BrowseCommand}" AutomationProperties.AutomationId="EditorBrowse"/>
+                        </Grid>
+
+                        <TextBlock Text="{core:L FieldName}" Style="{StaticResource T.Label}" Margin="0,20,0,8"/>
+                        <TextBox Style="{StaticResource Input}" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                 core:Ui.Placeholder="{core:L NamePlaceholder}" AutomationProperties.AutomationId="EditorName"/>
+
+                        <TextBlock Text="{core:L FieldArgs}" Style="{StaticResource T.Label}" Margin="0,20,0,8"/>
+                        <TextBox Style="{StaticResource Input.Mono}" Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}"
+                                 core:Ui.Placeholder="{core:L ArgsPlaceholder}" AutomationProperties.AutomationId="EditorArgs"/>
+
+                        <CheckBox Style="{StaticResource Toggle}" IsChecked="{Binding RunAsAdmin}" Margin="0,22,0,0" AutomationProperties.AutomationId="EditorAdmin">
+                            <StackPanel>
+                                <TextBlock Text="{core:L RunAsAdmin}" Style="{StaticResource T.Strong}" FontSize="14"/>
+                                <TextBlock Text="{core:L RunAsAdminHint}" Style="{StaticResource T.Small}" Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </CheckBox>
+
+                        <Button Style="{StaticResource Btn.Bare}" HorizontalAlignment="Left" Margin="0,22,0,0" Command="{Binding ToggleAdvancedCommand}"
+                                Foreground="{StaticResource B.Muted}" AutomationProperties.AutomationId="EditorAdvanced">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{core:L Advanced}" FontFamily="{StaticResource F.Semi}" FontWeight="SemiBold" FontSize="13.5" VerticalAlignment="Center"/>
+                                <c:IconView Data="{StaticResource I.ChevronDown}" Size="16" Margin="6,1,0,0" VerticalAlignment="Center"
+                                            Visibility="{Binding ShowAdvanced, Converter={StaticResource BoolVisInv}}"/>
+                                <c:IconView Data="{StaticResource I.ChevronUp}" Size="16" Margin="6,1,0,0" VerticalAlignment="Center"
+                                            Visibility="{Binding ShowAdvanced, Converter={StaticResource BoolVis}}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <StackPanel Visibility="{Binding ShowAdvanced, Converter={StaticResource BoolVis}}" core:Anim.ShowEffect="Fade">
+                            <TextBlock Text="{core:L FieldWorkDir}" Style="{StaticResource T.Label}" Margin="0,18,0,8"/>
+                            <TextBox Style="{StaticResource Input.Mono}" Text="{Binding WorkingDirectory, UpdateSourceTrigger=PropertyChanged}"
+                                     core:Ui.Placeholder="{core:L WorkDirPlaceholder}"/>
+
+                            <TextBlock Text="{core:L FieldExtra}" Style="{StaticResource T.Label}" Margin="0,20,0,8"/>
+                            <TextBox Style="{StaticResource Input.Mono}" Text="{Binding ExtraProcesses, UpdateSourceTrigger=PropertyChanged}"
+                                     core:Ui.Placeholder="{core:L ExtraPlaceholder}"/>
+                            <TextBlock Text="{core:L ExtraHint}" Style="{StaticResource T.Small}" Margin="0,7,0,0"/>
+
+                            <TextBlock Text="{core:L FieldCover}" Style="{StaticResource T.Label}" Margin="0,20,0,8"/>
+                            <Border Background="{StaticResource B.Field}" BorderBrush="{StaticResource B.Line}" BorderThickness="1" CornerRadius="8" Padding="12,6,6,6">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <c:IconView Data="{StaticResource I.Image}" Size="17" Foreground="{StaticResource B.Dim}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding CoverName}" Style="{StaticResource T.Small}" Margin="10,0,10,0"
+                                               VerticalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                                    <Button Grid.Column="2" Style="{StaticResource Btn.Ghost}" Height="34" Padding="12,0" FontSize="13"
+                                            Content="{core:L ChooseImage}" Command="{Binding BrowseCoverCommand}"/>
+                                    <Button Grid.Column="3" Style="{StaticResource Btn.Bare}" Margin="10,0,6,0" Content="{core:L ClearImage}"
+                                            Command="{Binding ClearCoverCommand}" Visibility="{Binding HasCover, Converter={StaticResource BoolVis}}"/>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <Border Grid.Row="2" BorderBrush="{StaticResource B.Line}" BorderThickness="0,1,0,0" Margin="0,18,0,0" Padding="30,16">
+                    <Grid>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,280,0"
+                                    Visibility="{Binding Error, Converter={StaticResource NullVis}}">
+                            <c:IconView Data="{StaticResource I.Alert}" Size="16" Foreground="{StaticResource B.DangerText}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding Error}" Foreground="{StaticResource B.DangerText}" FontSize="13" Margin="8,0,0,0"
+                                       TextWrapping="Wrap" VerticalAlignment="Center" AutomationProperties.AutomationId="EditorError"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource Btn.Ghost}" Content="{core:L Cancel}" Command="{Binding CancelCommand}"
+                                    AutomationProperties.AutomationId="EditorCancel"/>
+                            <Button Style="{StaticResource Btn.Primary}" Margin="10,0,0,0" Content="{Binding SaveText}" Command="{Binding SaveCommand}"
+                                    IsDefault="True" AutomationProperties.AutomationId="EditorSave"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
