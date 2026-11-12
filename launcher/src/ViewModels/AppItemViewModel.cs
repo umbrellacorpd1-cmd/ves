@@ -71,7 +71,7 @@ namespace UmbraLauncher.ViewModels
             get => _icon;
             private set
             {
-                if (Set(ref _icon, value)) Raise(nameof(HasIcon), nameof(ShowFallbackGlyph));
+                if (Set(ref _icon, value)) Raise(nameof(HasIcon), nameof(ShowFallbackGlyph), nameof(ShowCenterIcon));
             }
         }
 
@@ -126,6 +126,8 @@ namespace UmbraLauncher.ViewModels
         public string HeroMeta => Entry.LastPlayedAt > 0
             ? $"{Loc.F("LastLaunched", Fmt.RelativeLower(Entry.LastPlayedAt))}   ·   {Fmt.Sessions(SessionCount)}"
             : Loc.T("NeverLaunched");
+
+        public string HeroBadge => Entry.LastPlayedAt > 0 ? Loc.T("HeroContinue") : Loc.T("HeroReady");
 
         public bool IsNew => Entry.LaunchCount == 0 && _count == 0 && !IsRunning && Fmt.NowUnix() - Entry.AddedAt < 3 * 86400;
 
@@ -219,7 +221,7 @@ namespace UmbraLauncher.ViewModels
         {
             Raise(nameof(LiveSeconds), nameof(LiveClock), nameof(RunningLabel), nameof(TotalSeconds), nameof(TotalText),
                 nameof(HoursBadge), nameof(HasPlaytime), nameof(SessionCount), nameof(SessionCountText), nameof(LastPlayedText),
-                nameof(AvgText), nameof(WeekText), nameof(LongestText), nameof(CardSubtitle), nameof(HeroMeta), nameof(IsNew));
+                nameof(AvgText), nameof(WeekText), nameof(LongestText), nameof(CardSubtitle), nameof(HeroMeta), nameof(HeroBadge), nameof(IsNew));
         }
 
         /// <summary>Builds the drawer's 14-day chart and session history.</summary>

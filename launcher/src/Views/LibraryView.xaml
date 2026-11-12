@@ -120,7 +120,7 @@
                                     <Grid x:Name="Root" RenderTransformOrigin="0.5,0.5">
                                         <Border x:Name="Glow" Margin="-26" Background="{DynamicResource B.ButtonGlow}" Opacity="0.35"/>
                                         <Border CornerRadius="14" Background="{DynamicResource B.AccentCard}" BorderBrush="#40FFFFFF" BorderThickness="1"/>
-                                        <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,40">
+                                        <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,30">
                                             <Grid Width="66" Height="66" HorizontalAlignment="Center">
                                                 <Ellipse Fill="White"/>
                                                 <c:IconView Data="{StaticResource I.Plus}" Size="30" StrokeThickness="2.6" Foreground="{DynamicResource B.Accent}"
@@ -155,7 +155,7 @@
                             <c:IconView Data="{StaticResource I.Image}" Size="52" StrokeThickness="1.4" Foreground="#2EFFFFFF" VerticalAlignment="Bottom" Margin="0,0,0,54"/>
                         </Border>
                     </UniformGrid>
-                    <Viewbox Width="880" Height="190" VerticalAlignment="Top" Margin="0,54,0,0" StretchDirection="Both" IsHitTestVisible="False">
+                    <Viewbox Width="880" Height="190" VerticalAlignment="Top" Margin="0,34,0,0" StretchDirection="Both" IsHitTestVisible="False">
                         <c:OutlinedText Text="{Binding BrandTitle}" FontFamily="{StaticResource F.Brand}" FontWeight="Black" FontStyle="Italic"
                                         FontSize="220" Stroke="#E6FFFFFF" StrokeThickness="2.2"/>
                     </Viewbox>
@@ -172,7 +172,7 @@
         </ScrollViewer>
 
         <!-- ================= Library ================= -->
-        <ScrollViewer x:Name="Scroller" Style="{StaticResource Scroll.Slim}" Visibility="{Binding HasApps, Converter={StaticResource BoolVis}}">
+        <ScrollViewer x:Name="Scroller" Style="{StaticResource Scroll.Slim}" Visibility="{Binding HasApps, Converter={StaticResource BoolVis}}" AutomationProperties.AutomationId="LibraryScroller">
             <StackPanel Margin="28,6,28,30">
 
                 <!-- Hero: last played / running app -->
@@ -204,7 +204,7 @@
                         <StackPanel VerticalAlignment="Top">
                             <WrapPanel>
                                 <Border Style="{StaticResource Badge.DarkAccent}" Visibility="{Binding IsRunning, Converter={StaticResource BoolVisInv}}">
-                                    <TextBlock Text="{core:L HeroContinue}"/>
+                                    <TextBlock Text="{Binding HeroBadge}"/>
                                 </Border>
                                 <Border Style="{StaticResource Badge.DarkRunning}" Visibility="{Binding IsRunning, Converter={StaticResource BoolVis}}">
                                     <StackPanel Orientation="Horizontal">
@@ -283,7 +283,7 @@
                         </Border>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <TextBox x:Name="SearchBox" Style="{StaticResource Input}" Width="250" Height="40"
+                        <TextBox x:Name="SearchBox" Style="{StaticResource Input}" Width="250" Height="40" Padding="10,0"
                                  Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                                  core:Ui.Placeholder="{core:L SearchPlaceholder}" core:Ui.Icon="{StaticResource I.Search}"
                                  AutomationProperties.AutomationId="SearchBox"/>

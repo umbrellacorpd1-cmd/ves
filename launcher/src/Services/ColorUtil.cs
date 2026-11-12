@@ -143,10 +143,13 @@ namespace UmbraLauncher.Services
         /// <summary>uc.zone-style product card: a saturated diagonal gradient in the app's own color.</summary>
         public static Brush CardBrush(double hue, double sat)
         {
+            // Darkened yellows turn olive; lean their shadow toward orange instead.
+            double h = ((hue % 360) + 360) % 360;
+            double endHue = h > 35 && h < 80 ? h - 22 : h + 14;
             var b = new LinearGradientBrush { StartPoint = new Point(0, 0), EndPoint = new Point(1, 1) };
-            b.GradientStops.Add(new GradientStop(FromHsl(hue - 6, sat * 0.85, 0.60), 0));
-            b.GradientStops.Add(new GradientStop(FromHsl(hue, sat * 0.9, 0.44), 0.45));
-            b.GradientStops.Add(new GradientStop(FromHsl(hue + 14, sat * 0.85, 0.24), 1));
+            b.GradientStops.Add(new GradientStop(FromHsl(h - 6, sat * 0.85, 0.60), 0));
+            b.GradientStops.Add(new GradientStop(FromHsl(h, sat * 0.9, 0.45), 0.45));
+            b.GradientStops.Add(new GradientStop(FromHsl(endHue, Math.Min(1, sat * 1.05), 0.26), 1));
             return Frozen(b);
         }
 

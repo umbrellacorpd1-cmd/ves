@@ -116,6 +116,14 @@ function Hover($el) {
 
 function Park-Mouse { [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point 5, 1070 }
 
+function Scroll-Top {
+    try {
+        $sv = Find-El $script:win 'LibraryScroller' 5
+        $sv.GetCurrentPattern([System.Windows.Automation.ScrollPattern]::Pattern).SetScrollPercent([System.Windows.Automation.ScrollPattern]::NoScroll, 0)
+        Start-Sleep -Milliseconds 500
+    } catch { Write-Host "  (scroll-to-top unavailable: $($_.Exception.Message))" }
+}
+
 $failed = $false
 $e2eDir = Join-Path $env:RUNNER_TEMP 'umbra-e2e'
 $demoDir = Join-Path $env:RUNNER_TEMP 'umbra-demo'
@@ -185,6 +193,7 @@ try {
     Start-Launcher $demoDir
     Bring-Front
     Start-Sleep -Seconds 2
+    Scroll-Top
     Save-Shot '10-library'
 
     $cards = $win.FindAll($Scope::Descendants, (New-Object System.Windows.Automation.PropertyCondition($AE::ControlTypeProperty, [System.Windows.Automation.ControlType]::Button)))
@@ -192,7 +201,6 @@ try {
     foreach ($c in $cards) { if ($c.Current.AutomationId -like 'Card_*') { $firstCard = $c; break } }
     if ($firstCard) { Hover $firstCard; Save-Shot '11-card-hover'; Park-Mouse }
 
-    $scroller = $null
     Invoke-El (Find-El $win 'HeroDetails')
     Start-Sleep -Seconds 1
     Save-Shot '12-details-drawer'
@@ -203,6 +211,7 @@ try {
     Invoke-El (Find-El $win 'Play_Notepad')
     Start-Sleep -Seconds 8
     Bring-Front
+    Scroll-Top
     Save-Shot '13-running-hero'
 
     Select-El (Find-El $win 'NavStats')
@@ -216,6 +225,7 @@ try {
     Select-El (Find-El $win 'NavLibrary')
     Invoke-El (Find-El $win 'LanguageToggle')
     Start-Sleep -Seconds 1
+    Scroll-Top
     Save-Shot '16-library-ru'
 
     Select-El (Find-El $win 'ViewList')

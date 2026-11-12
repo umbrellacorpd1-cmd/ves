@@ -16,8 +16,9 @@ namespace UmbraLauncher.Core
             if (s == 0) return Ru ? "0 мин" : "0 min";
             if (h == 0 && m == 0) return Ru ? "< 1 мин" : "< 1 min";
             if (h == 0) return Ru ? $"{m} мин" : $"{m} min";
-            if (m == 0) return Ru ? $"{h:N0} ч" : $"{h:N0} h";
-            return Ru ? $"{h.ToString("N0", C)} ч {m} мин" : $"{h.ToString("N0", C)} h {m} min";
+            var hours = h.ToString("N0", C);
+            if (m == 0) return Ru ? $"{hours} ч" : $"{hours} h";
+            return Ru ? $"{hours} ч {m} мин" : $"{hours} h {m} min";
         }
 
         public static string DurationShort(double seconds)
@@ -63,7 +64,7 @@ namespace UmbraLauncher.Core
         public static string RelativeLower(long unix)
         {
             var s = Relative(unix);
-            return Ru ? s.Substring(0, 1).ToLower(C) + s.Substring(1) : s.Substring(0, 1).ToLower(C) + s.Substring(1);
+            return s.Length == 0 ? s : char.ToLower(s[0], C) + s.Substring(1);
         }
 
         public static string SessionDate(DateTime local)

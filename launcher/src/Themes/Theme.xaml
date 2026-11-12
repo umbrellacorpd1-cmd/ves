@@ -689,18 +689,19 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
+                    <!-- TextBox applies Padding to its content host itself, so only the placeholder needs it here. -->
                     <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8" SnapsToDevicePixels="True">
-                        <Grid Margin="{TemplateBinding Padding}">
+                        <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <c:IconView x:Name="Ico" Data="{Binding (core:Ui.Icon), RelativeSource={RelativeSource TemplatedParent}}"
-                                        Size="16" Foreground="{StaticResource B.Dim}" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                        Size="16" Foreground="{StaticResource B.Dim}" Margin="14,0,0,0" VerticalAlignment="Center"/>
                             <TextBlock x:Name="Ph" Grid.Column="1" Text="{Binding (core:Ui.Placeholder), RelativeSource={RelativeSource TemplatedParent}}"
                                        Foreground="{StaticResource B.Dim}" VerticalAlignment="Center" Visibility="Collapsed" IsHitTestVisible="False"
-                                       TextTrimming="CharacterEllipsis" Margin="2,0,0,0"/>
+                                       TextTrimming="CharacterEllipsis" Padding="{TemplateBinding Padding}" Margin="2,0,0,0"/>
                             <ScrollViewer x:Name="PART_ContentHost" Grid.Column="1" VerticalAlignment="Center" Focusable="False"
                                           HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
                         </Grid>
