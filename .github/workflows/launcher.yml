@@ -20,7 +20,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build single-file exe (.NET Framework 4.8, no dependencies)
         shell: pwsh
@@ -36,13 +36,13 @@ jobs:
 
       - name: Upload screenshots and logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: launcher-ui-test
           path: artifacts/
 
       - name: Upload launcher exe
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: UmbraLauncher
           path: dist/UmbraLauncher.exe

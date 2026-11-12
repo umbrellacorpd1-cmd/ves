@@ -5,6 +5,15 @@ near-black canvas, hot-pink accent, heavy uppercase headings, hairline borders, 
 
 Add any `.exe` (or a shortcut), launch it from the menu in one click, and the launcher counts how many hours you spend in each app.
 
+![Library](docs/library.jpg)
+
+| | |
+| --- | --- |
+| ![Statistics](docs/statistics.jpg) | ![App details](docs/details.jpg) |
+| ![First run](docs/empty-state.jpg) | ![Russian UI, list view](docs/list-ru.jpg) |
+
+<sub>Captured by the CI UI test on a Windows runner (real app, demo data).</sub>
+
 ## Run it
 
 `UmbraLauncher.exe` is a single file. It runs on the .NET Framework 4.8 that ships with Windows 10 (1903+) and Windows 11, so

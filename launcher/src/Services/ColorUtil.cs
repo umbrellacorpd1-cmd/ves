@@ -23,7 +23,6 @@ namespace UmbraLauncher.Services
             }
         }
 
-        public static string ToHex(Color c) => $"#{c.R:X2}{c.G:X2}{c.B:X2}";
 
         public static Color WithAlpha(Color c, byte a) => Color.FromArgb(a, c.R, c.G, c.B);
 

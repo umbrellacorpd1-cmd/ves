@@ -21,14 +21,6 @@ namespace UmbraLauncher.Core
             return Ru ? $"{hours} ч {m} мин" : $"{hours} h {m} min";
         }
 
-        public static string DurationShort(double seconds)
-        {
-            long s = (long)Math.Round(Math.Max(0, seconds));
-            long h = s / 3600, m = s % 3600 / 60;
-            if (h == 0) return Ru ? $"{m}м" : $"{m}m";
-            return Ru ? $"{h}ч {m:00}м" : $"{h}h {m:00}m";
-        }
-
         public static string Clock(double seconds)
         {
             var t = TimeSpan.FromSeconds(Math.Max(0, Math.Floor(seconds)));
@@ -100,9 +92,5 @@ namespace UmbraLauncher.Core
         public static string Apps(long n) => Ru
             ? $"{n} {Plural(n, "приложение", "приложения", "приложений")}"
             : $"{n} {(n == 1 ? "app" : "apps")}";
-
-        public static string Launches(long n) => Ru
-            ? $"{n} {Plural(n, "запуск", "запуска", "запусков")}"
-            : $"{n} {(n == 1 ? "launch" : "launches")}";
     }
 }

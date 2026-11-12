@@ -33,7 +33,6 @@ namespace UmbraLauncher.ViewModels
         public string AxisMid { get; private set; }
         public bool HasData { get; private set; }
         public bool HasChartData { get; private set; }
-        public int Columns { get; private set; } = 14;
 
         public string ChartTitle => $"{Loc.T("ChartTitle")} · {Loc.T("Range" + _main.StatsRange)}".ToUpper(Loc.I.Culture);
 
@@ -79,7 +78,6 @@ namespace UmbraLauncher.ViewModels
 
             // Activity chart
             int range = _main.StatsRange;
-            Columns = range;
             var first = today.AddDays(-(range - 1));
             var values = StatsMath.PerDay(allSpans, first, range);
             double peak = values.Length == 0 ? 0 : values.Max();
@@ -125,7 +123,7 @@ namespace UmbraLauncher.ViewModels
             HasData = ranked.Count > 0;
             Raise(nameof(TotalText), nameof(TotalSub), nameof(WeekText), nameof(WeekSub), nameof(WeekUp), nameof(TodayText),
                 nameof(TodaySub), nameof(TopName), nameof(TopText), nameof(TopIcon), nameof(TopBrush), nameof(AxisTop), nameof(AxisMid),
-                nameof(HasData), nameof(HasChartData), nameof(Columns), nameof(ChartTitle));
+                nameof(HasData), nameof(HasChartData), nameof(ChartTitle));
         }
     }
 }

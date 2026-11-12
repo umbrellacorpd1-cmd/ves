@@ -48,11 +48,9 @@ namespace UmbraLauncher.ViewModels
             AddCommand = new RelayCommand(() => OpenAddEditor(null));
             AddTile = new AddTileItem(AddCommand);
             Stats = new StatsViewModel(this);
-            NavigateCommand = new RelayCommand(p => Page = p?.ToString() ?? "Library");
             ToggleLanguageCommand = new RelayCommand(() => Language = Loc.I.IsRu ? "en" : "ru");
             CloseDrawerCommand = new RelayCommand(() => IsDrawerOpen = false);
             EscapeCommand = new RelayCommand(OnEscape);
-            ClearSearchCommand = new RelayCommand(() => SearchText = string.Empty);
             OpenDataFolderCommand = new RelayCommand(() => ShellHelpers.OpenFolder(_storage.DataDir));
             ExportCsvCommand = new RelayCommand(ExportCsv);
             ResetStatsCommand = new RelayCommand(AskResetStats);
@@ -98,11 +96,9 @@ namespace UmbraLauncher.ViewModels
         public StatsViewModel Stats { get; }
 
         public ICommand AddCommand { get; }
-        public ICommand NavigateCommand { get; }
         public ICommand ToggleLanguageCommand { get; }
         public ICommand CloseDrawerCommand { get; }
         public ICommand EscapeCommand { get; }
-        public ICommand ClearSearchCommand { get; }
         public ICommand OpenDataFolderCommand { get; }
         public ICommand ExportCsvCommand { get; }
         public ICommand ResetStatsCommand { get; }

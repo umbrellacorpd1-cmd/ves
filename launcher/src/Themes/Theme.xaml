@@ -28,7 +28,6 @@
     <SolidColorBrush x:Key="B.Dim" Color="{StaticResource C.Dim}"/>
     <SolidColorBrush x:Key="B.Line" Color="#1AFFFFFF"/>
     <SolidColorBrush x:Key="B.LineStrong" Color="#30FFFFFF"/>
-    <SolidColorBrush x:Key="B.Hover" Color="#0FFFFFFF"/>
     <SolidColorBrush x:Key="B.Field" Color="#0AFFFFFF"/>
     <SolidColorBrush x:Key="B.Success" Color="{StaticResource C.Success}"/>
     <SolidColorBrush x:Key="B.SuccessText" Color="#7CE8B0"/>
@@ -82,10 +81,6 @@
         <GradientStop Color="#B3101014" Offset="0.45"/>
         <GradientStop Color="#00101014" Offset="0.85"/>
     </LinearGradientBrush>
-    <LinearGradientBrush x:Key="B.PanelSheen" StartPoint="0.5,0" EndPoint="0.5,1">
-        <GradientStop Color="#0CFFFFFF" Offset="0"/>
-        <GradientStop Color="#03FFFFFF" Offset="1"/>
-    </LinearGradientBrush>
     <LinearGradientBrush x:Key="B.EmptyCard" StartPoint="0.5,0" EndPoint="0.5,1">
         <GradientStop Color="#232329" Offset="0"/>
         <GradientStop Color="#141418" Offset="1"/>
@@ -111,10 +106,8 @@
     <core:NullToVisibilityConverter x:Key="NullVisInv" Invert="True"/>
     <core:EqualsToBoolConverter x:Key="EqBool"/>
     <core:EqualsToVisibilityConverter x:Key="EqVis"/>
-    <core:EqualsToVisibilityConverter x:Key="EqVisInv" Invert="True"/>
     <core:WidthToColumnsConverter x:Key="WidthToColumns"/>
     <core:CountToVisibilityConverter x:Key="CountVis"/>
-    <core:CountToVisibilityConverter x:Key="CountVisInv" Invert="True"/>
 
     <!-- ================= Typography ================= -->
     <Style x:Key="T.H1" TargetType="TextBlock">
@@ -998,14 +991,6 @@
         <Setter Property="BorderBrush" Value="{StaticResource B.Line}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="16"/>
-    </Style>
-
-    <Style x:Key="Kpi" TargetType="Border">
-        <Setter Property="BorderBrush" Value="{StaticResource B.Line}"/>
-        <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="14"/>
-        <Setter Property="Padding" Value="22,20"/>
-        <Setter Property="Margin" Value="0,0,16,0"/>
     </Style>
 
     <!-- Majestic's grey hero card strips (empty state). -->

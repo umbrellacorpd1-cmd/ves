@@ -34,6 +34,7 @@ public static class TestNative {
     [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
     [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int cmd);
     [DllImport("user32.dll")] public static extern bool SetProcessDPIAware();
+    [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hWnd);
     public static string SetResolution(int w, int h) {
         var dm = new DEVMODE();
         dm.dmSize = (short)Marshal.SizeOf(typeof(DEVMODE));
@@ -183,8 +184,20 @@ try {
     Bring-Front
     Save-Shot '05-after-session'
     Copy-Item (Join-Path $e2eDir 'library.json') (Join-Path $Out 'e2e-library.json')
-    Stop-Launcher
     Write-Host '  PASS: playtime tracked and persisted'
+
+    # Close button keeps the launcher alive in the tray; starting the exe again restores the same instance.
+    $hwnd = [IntPtr]$win.Current.NativeWindowHandle
+    Invoke-El (Find-El $win 'CloseButton')
+    Start-Sleep -Seconds 2
+    if ($proc.HasExited) { throw 'Launcher exited instead of staying in the tray' }
+    if ([TestNative]::IsWindowVisible($hwnd)) { throw 'Window is still visible after closing to tray' }
+    $second = Start-Process -FilePath $Exe -ArgumentList @('--data', "`"$e2eDir`"") -PassThru
+    if (-not $second.WaitForExit(15000)) { throw 'Second instance did not hand over and exit' }
+    Start-Sleep -Seconds 2
+    if (-not [TestNative]::IsWindowVisible($hwnd)) { throw 'Existing window was not restored by the second launch' }
+    Write-Host '  PASS: close-to-tray and single-instance restore'
+    Stop-Launcher
 
     # ---------------- Part 2: seeded demo screenshots ----------------
     Write-Host '== Part 2: demo screenshots'
@@ -242,6 +255,14 @@ try {
     Start-Sleep -Seconds 1
     Save-Shot '19-add-dialog-ru'
     Invoke-El (Find-El $win 'EditorCancel')
+
+    # Resource use while tracking one running app (scans every 2 s).
+    $proc.Refresh()
+    $cpu0 = $proc.TotalProcessorTime.TotalMilliseconds
+    Start-Sleep -Seconds 30
+    $proc.Refresh()
+    $cpuPct = ($proc.TotalProcessorTime.TotalMilliseconds - $cpu0) / 30000 / [Environment]::ProcessorCount * 100
+    Write-Host ("  launcher CPU while tracking: {0:N2}% of total CPU, working set {1:N0} MB" -f $cpuPct, ($proc.WorkingSet64 / 1MB))
 
     Get-Process notepad -ErrorAction SilentlyContinue | Where-Object { $before -notcontains $_.Id } | Stop-Process -Force
     Stop-Launcher
